@@ -1,0 +1,264 @@
+FUNCTION_BLOCK "AI_Proc"
+{S7_m_c := 'true'}
+
+    VAR_INPUT 
+        analog_raw : Int;   // 模拟量采集值
+        zero_raw {S7_m_c := 'true'} : INT;   // 变送器零点原始值（4mA对应数值）0
+        span_raw {S7_m_c := 'true'} : INT := 27648;   // 变送器极值原始值（20mA对应数值）27648
+        overflow_radius {S7_m_c := 'true'} : INT := 500;   // 溢出半径
+        range_low {S7_m_c := 'true'} : REAL;   // 量程低值
+        range_high {S7_m_c := 'true'} : REAL := 100.0;   // 量程高值
+        offset {S7_m_c := 'true'} : REAL;   // 偏置值
+        invalidValue {S7_m_c := 'true'} : REAL := -1000000.0;   // 无效输入时指定输出值
+        highAlarm {S7_m_c := 'true'} : REAL := 80.0;   // 高高报设定值
+        highWarn {S7_m_c := 'true'} : REAL := 70.0;   // 高报设定值
+        lowWarn {S7_m_c := 'true'} : REAL := 2.0;   // 低报设定值
+        lowAlarm {S7_m_c := 'true'} : REAL := 1.0;   // 低低报设定值
+        dead_zone_radius {S7_m_c := 'true'} : REAL := 0.5;   // 死区半径 （赋值0.0时无死区）
+        fault_tolerance_time {S7_m_c := 'true'} : TIME := T#0MS;   // 容错时间 (单位毫秒 赋值T#0MS时无容错时间)
+    END_VAR
+
+    VAR_OUTPUT 
+        PV {S7_m_c := 'true'} : REAL;   // 采集量工程单位数值
+        highAlarm_flag {S7_m_c := 'true'} : BOOL;   // 高高报标志
+        highWarn_flag {S7_m_c := 'true'} : Bool;   // 高报标志
+        lowWarn_flag {S7_m_c := 'true'} : Bool;   // 低报标志
+        lowAlarm_flag {S7_m_c := 'true'} : Bool;   // 低低报标志
+        highOverflow {S7_m_c := 'true'} : Bool;   // 高溢出
+        lowOverflow {S7_m_c := 'true'} : Bool;   // 低溢出
+        error {S7_m_c := 'true'} : Bool;   // 错误
+        reserve : Bool;   // 预留
+    END_VAR
+
+    VAR 
+        trigger_highAlarm : Bool;   // 触发高高报
+        trigger_highWarn : Bool;   // 触发高报
+        trigger_lowWarn : Bool;   // 触发低报
+        trigger_lowAlarm : Bool;   // 触发低低报
+        highAlarm_set : TON;
+        highAlarm_reset : TOF;
+        highWarn_set : TON;
+        highWarn_reset : TOF;
+        lowWarn_set : TON;
+        lowWarn_reset : TOF;
+        lowAlarm_set : TON;
+        lowAlarm_reset : TOF;
+    END_VAR
+
+    VAR_TEMP 
+        tempPV : Real;
+        highAlarm_H : Real;   // 高高限死区高侧
+        highAlarm_L : Real;   // 高高限死区低侧
+        highWarn_H : Real;   // 高限死区高侧
+        highWarn_L : Real;   // 高限死区低侧
+        lowWarn_H : Real;   // 低限死区高侧
+        lowWarn_L : Real;   // 低限死区低侧
+        lowAlarm_H : Real;   // 低低限死区高侧
+        lowAlarm_L : Real;   // 低低限死区低侧
+    END_VAR
+
+
+BEGIN
+    //调用示例：
+    //调用时，先建立对应的背景数据块，比如"TIT001"，调用时除AI通道值外，其它参数可省略，直接操纵背景块。
+    //#TIT001(
+    //       analog_raw          := "AI01-1",//%IW256:P
+    //       zero_raw            :=  ,//变送器零点原始值（4mA对应数值）0
+    //       span_raw            :=  ,//变送器极值原始值（20mA对应数值）27648
+    //       overflow_radius     :=  ,//指定溢出的容错值 默认500
+    //       range_low           :=  ,//量程低值
+    //       range_high          :=  ,//量程高值
+    //       offset              :=  ,//偏置值
+    //       invalidValue        :=  ,//无效输入时指定输出值,比如回路断线
+    //       highAlarm           :=  ,//高高报设定值
+    //       highWarn            :=  ,//高报设定值
+    //       lowWarn             :=  ,//低报设定值
+    //       lowAlarm            :=  ,//低低报设定值
+    //       dead_zone_radius    :=  ,//死区半径 (赋值0.0时无死区)
+    //       fault_tolerance_time:=  ,//容错时间 (单位毫秒 赋值T#0MS时无容错时间)
+    //       PV                  :=  ,//采集量工程单位数值
+    //       highAlarm_flag      :=  ,//高高报标志
+    //       highWarn_flag       :=  ,//高报标志
+    //       lowWarn_flag        :=  ,//低报标志
+    //       lowAlarm_flag       :=  ,//低低报标志
+    //       highOverflow        :=  ,//高溢出
+    //       lowOverflow         :=  ,//低溢出
+    //       error               :=  )//错误
+    
+    
+    highOverflow := analog_raw > span_raw + overflow_radius;
+    IF highOverflow THEN
+        lowOverflow := FALSE;
+        highAlarm_flag := FALSE;
+        highWarn_flag := FALSE;
+        lowAlarm_flag := FALSE;
+        lowWarn_flag := FALSE;
+    END_IF;
+    
+    lowOverflow := analog_raw < zero_raw - overflow_radius;
+    IF lowOverflow THEN
+        highOverflow := FALSE;
+        highAlarm_flag := FALSE;
+        highWarn_flag := FALSE;
+        lowWarn_flag := FALSE;
+        lowAlarm_flag := FALSE;
+    END_IF;
+    
+    IF highOverflow OR lowOverflow THEN
+        // 溢出时不计算，直接赋值为 -1000000.0
+        PV := invalidValue;
+        tempPV := invalidValue;
+    ELSE
+        PV := (analog_raw - zero_raw)
+        * (range_high - range_low) / (span_raw - zero_raw)
+        + range_low;
+        tempPV := PV;
+    END_IF;
+    
+    
+    //计算死区值
+    highAlarm_H := highAlarm + dead_zone_radius;
+    highAlarm_L := highAlarm - dead_zone_radius;
+    highWarn_H := highWarn + dead_zone_radius;
+    highWarn_L := highWarn - dead_zone_radius;
+    lowWarn_H := lowWarn + dead_zone_radius;
+    lowWarn_L := lowWarn - dead_zone_radius;
+    lowAlarm_H := lowAlarm + dead_zone_radius;
+    lowAlarm_L := lowAlarm - dead_zone_radius;
+    
+    //参数设置错误或溢出
+    error := (highAlarm_H > range_high)
+    OR (lowAlarm_L < range_low)
+    OR (highWarn > highAlarm)
+    OR (lowWarn < lowAlarm)
+    OR highOverflow
+    OR lowOverflow;
+    
+    //上上限报警
+    IF NOT error AND (tempPV > highAlarm_H) THEN
+        trigger_highAlarm := TRUE;
+        trigger_lowAlarm := FALSE;
+        trigger_lowWarn := FALSE;
+    END_IF;
+    //上上限报警恢复
+    IF tempPV < highAlarm_L THEN
+        trigger_highAlarm := FALSE;
+    END_IF;
+    
+    //上限报警
+    IF NOT error AND (tempPV > highWarn_H) THEN
+        trigger_highWarn := TRUE;
+        trigger_lowAlarm := FALSE;
+        trigger_lowWarn := FALSE;
+    END_IF;
+    //上限报警恢复
+    IF tempPV < highWarn_L THEN
+        trigger_highWarn := FALSE;
+    END_IF;
+    
+    //下限报警
+    IF NOT error AND (tempPV < lowWarn_L) THEN
+        trigger_lowWarn := TRUE;
+        trigger_highWarn := FALSE;
+        trigger_highAlarm := FALSE;
+    END_IF;
+    //下限报警恢复
+    IF tempPV > lowWarn_H THEN
+        trigger_lowWarn := FALSE;
+    END_IF;
+    
+    //下下限报警
+    IF NOT error AND (tempPV < lowAlarm_L) THEN
+        trigger_lowAlarm := TRUE;
+        trigger_highWarn := FALSE;
+        trigger_highAlarm := FALSE;
+    END_IF;
+    //下下限报警恢复
+    IF tempPV > lowAlarm_H THEN
+        trigger_lowAlarm := FALSE;
+    END_IF;
+    
+    IF fault_tolerance_time = T#0ms THEN
+        highAlarm_flag := trigger_highAlarm;
+        highWarn_flag := trigger_highWarn;
+        lowWarn_flag := trigger_lowWarn;
+        lowAlarm_flag := trigger_lowAlarm;
+    ELSE
+        // 延时置位高高报
+        highAlarm_set(
+                                IN := trigger_highAlarm,
+                                PT := fault_tolerance_time);
+        IF highAlarm_set.Q THEN
+                highAlarm_flag := TRUE;
+        END_IF;
+
+        // 延时复位高高报
+        highAlarm_reset(
+                                IN := trigger_highAlarm,
+                                PT := fault_tolerance_time);
+        IF NOT highAlarm_reset.Q THEN
+                highAlarm_flag := FALSE;
+        END_IF;
+        
+        // 延时置位高报
+        highWarn_set(
+                                IN := trigger_highWarn,
+                                PT := fault_tolerance_time);
+        IF highWarn_set.Q THEN
+                highWarn_flag := TRUE;
+        END_IF;
+
+        // 延时复位高报
+        highWarn_reset(
+                                IN := trigger_highWarn,
+                                PT := fault_tolerance_time);
+        IF NOT highWarn_reset.Q THEN
+                highWarn_flag := FALSE;
+        END_IF;
+        
+        // 延时置位低报
+        lowWarn_set(
+                                IN := trigger_lowWarn,
+                                PT := fault_tolerance_time);
+        IF lowWarn_set.Q THEN
+                lowWarn_flag := TRUE;
+        END_IF;
+
+        // 延时复位低报
+        lowWarn_reset(
+                                IN := trigger_lowWarn,
+                                PT := fault_tolerance_time);
+        IF NOT lowWarn_reset.Q THEN
+                lowWarn_flag := FALSE;
+        END_IF;
+
+        // 延时置位低低报
+        lowAlarm_set(
+                                IN := trigger_lowAlarm,
+                                PT := fault_tolerance_time);
+        IF lowAlarm_set.Q THEN
+                lowAlarm_flag := TRUE;
+        END_IF;
+        
+        // 延时复位低低报
+        lowAlarm_reset(
+                                IN := trigger_lowAlarm,
+                                PT := fault_tolerance_time);
+        IF NOT lowAlarm_reset.Q THEN
+                lowAlarm_flag := FALSE;
+        END_IF;
+        
+    END_IF;
+    
+    // 清除标志
+    IF error THEN
+        trigger_highAlarm := false;
+        trigger_highWarn := false;
+        trigger_lowWarn := false;
+        trigger_lowAlarm := false;
+    END_IF;
+    
+END_FUNCTION_BLOCK
+
+
+
