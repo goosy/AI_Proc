@@ -1,8 +1,7 @@
 FUNCTION_BLOCK "AI_Proc"
 {S7_m_c := 'true'}
-
     VAR_INPUT 
-        analog_raw : Int;   // 模拟量采集值
+        analog_raw {S7_m_c := 'true'} : Int;   // 模拟量采集值
         zero_raw {S7_m_c := 'true'} : INT;   // 变送器零点原始值（4mA对应数值）0
         span_raw {S7_m_c := 'true'} : INT := 27648;   // 变送器极值原始值（20mA对应数值）27648
         overflow_radius {S7_m_c := 'true'} : INT := 500;   // 溢出半径
@@ -59,32 +58,7 @@ FUNCTION_BLOCK "AI_Proc"
 
 
 BEGIN
-    //调用示例：
-    //调用时，先建立对应的背景数据块，比如"TIT001"，调用时除AI通道值外，其它参数可省略，直接操纵背景块。
-    //#TIT001(
-    //       analog_raw          := "AI01-1",//%IW256:P
-    //       zero_raw            :=  ,//变送器零点原始值（4mA对应数值）0
-    //       span_raw            :=  ,//变送器极值原始值（20mA对应数值）27648
-    //       overflow_radius     :=  ,//指定溢出的容错值 默认500
-    //       range_low           :=  ,//量程低值
-    //       range_high          :=  ,//量程高值
-    //       offset              :=  ,//偏置值
-    //       invalidValue        :=  ,//无效输入时指定输出值,比如回路断线
-    //       highAlarm           :=  ,//高高报设定值
-    //       highWarn            :=  ,//高报设定值
-    //       lowWarn             :=  ,//低报设定值
-    //       lowAlarm            :=  ,//低低报设定值
-    //       dead_zone_radius    :=  ,//死区半径 (赋值0.0时无死区)
-    //       fault_tolerance_time:=  ,//容错时间 (单位毫秒 赋值T#0MS时无容错时间)
-    //       PV                  :=  ,//采集量工程单位数值
-    //       highAlarm_flag      :=  ,//高高报标志
-    //       highWarn_flag       :=  ,//高报标志
-    //       lowWarn_flag        :=  ,//低报标志
-    //       lowAlarm_flag       :=  ,//低低报标志
-    //       highOverflow        :=  ,//高溢出
-    //       lowOverflow         :=  ,//低溢出
-    //       error               :=  )//错误
-    
+   
     
     highOverflow := analog_raw > span_raw + overflow_radius;
     IF highOverflow THEN
@@ -141,7 +115,7 @@ BEGIN
         trigger_lowWarn := FALSE;
     END_IF;
     //上上限报警恢复
-    IF tempPV < highAlarm_L THEN
+    IF #error OR (tempPV < highAlarm_L) THEN
         trigger_highAlarm := FALSE;
     END_IF;
     
@@ -152,7 +126,7 @@ BEGIN
         trigger_lowWarn := FALSE;
     END_IF;
     //上限报警恢复
-    IF tempPV < highWarn_L THEN
+    IF #error OR (tempPV < highWarn_L) THEN
         trigger_highWarn := FALSE;
     END_IF;
     
@@ -163,7 +137,7 @@ BEGIN
         trigger_highAlarm := FALSE;
     END_IF;
     //下限报警恢复
-    IF tempPV > lowWarn_H THEN
+    IF #error OR (tempPV > lowWarn_H) THEN
         trigger_lowWarn := FALSE;
     END_IF;
     
@@ -174,7 +148,7 @@ BEGIN
         trigger_highAlarm := FALSE;
     END_IF;
     //下下限报警恢复
-    IF tempPV > lowAlarm_H THEN
+    IF #error OR (tempPV > lowAlarm_H) THEN
         trigger_lowAlarm := FALSE;
     END_IF;
     
@@ -250,15 +224,5 @@ BEGIN
         
     END_IF;
     
-    // 清除标志
-    IF error THEN
-        trigger_highAlarm := false;
-        trigger_highWarn := false;
-        trigger_lowWarn := false;
-        trigger_lowAlarm := false;
-    END_IF;
-    
 END_FUNCTION_BLOCK
-
-
 

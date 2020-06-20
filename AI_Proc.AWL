@@ -1,36 +1,12 @@
-FUNCTION_BLOCK "AI_Converter"
+FUNCTION_BLOCK "AI_CVTR"
 TITLE =AI Converter
 //模拟量转换函数
 //
-//准备工作：
-//要求先建立一个符号名为“AI_Converter”的空FB块，
-//再引入系统块 SFB4"TON" 和 SFB5"TOF"，
-//然后编译本代码即可。
+// 步骤：
+// 1. 先建立一个符号名为"AI_Proc"的空FB块
+// 2. 引入系统块 SFB4"TON" 和 SFB5"TOF"
+// 3. 然后编译本代码
 //
-//调用示例：
-//调用时，先建立对应的背景数据块，比如 DB1000，调用时除AI通道值外，其它参数可省略，直接操纵背景块。
-//      CALL  "AI_Converter" , DB1000
-//       analog_raw          := PIW256 //可只赋参数
-//       zero_raw            :=  //变送器零点原始值（4mA对应数值）0
-//       span_raw            :=  //变送器极值原始值（20mA对应数值）27648
-//       range_low           :=  //量程低值
-//       range_high          :=  //量程高值
-//       offset              :=  //偏置值
-//       highAlarm           :=  //高高报设定值
-//       highWarn            :=  //高报设定值
-//       lowWarn             :=  //低报设定值
-//       lowAlarm            :=  //低低报设定值
-//       dead_zone_radius    :=  //死区半径 (赋值0.0时无死区)
-//       fault_tolerance_time:=  //容错时间 (单位毫秒 赋值T#0MS时无容错时间)
-//       PV                  :=  //采集量工程单位数值
-//       highAlarm_flag      :=  //高高报标志
-//       highWarn_flag       :=  //高报标志
-//       lowWarn_flag        :=  //低报标志
-//       lowAlarm_flag       :=  //低低报标志
-//       highOverflow        :=  //高溢出
-//       lowOverflow         :=  //低溢出
-//       error               :=  //错误
-//       reserve             :=  //预留
 { S7_m_c := 'true' }
 AUTHOR : goosy
 NAME : AI_CVTR
@@ -38,12 +14,14 @@ VERSION : 0.1
 
 
 VAR_INPUT
-  analog_raw : INT ;	//模拟量采集值
+  analog_raw { S7_m_c := 'true' }: INT ;	//模拟量采集值
   zero_raw { S7_m_c := 'true' }: INT ;	//变送器零点原始值（4mA对应数值）0
   span_raw { S7_m_c := 'true' }: INT  := 27648;	//变送器极值原始值（20mA对应数值）27648
+  overflow_radius { S7_m_c := 'true' }: INT  := 500;	// 溢出半径
   range_low { S7_m_c := 'true' }: REAL ;	//量程低值
   range_high { S7_m_c := 'true' }: REAL  := 1.000000e+002;	//量程高值
   offset { S7_m_c := 'true' }: REAL ;	//偏置值
+  invalidValue { S7_m_c := 'true' }: REAL  := -1.000000e+006;	// 无效输入时指定输出值
   highAlarm { S7_m_c := 'true' }: REAL  := 8.000000e+001;	//高高报设定值
   highWarn { S7_m_c := 'true' }: REAL  := 7.000000e+001;	//高报设定值
   lowWarn { S7_m_c := 'true' }: REAL  := 2.000000e+000;	//低报设定值
@@ -57,9 +35,6 @@ VAR_OUTPUT
   highWarn_flag { S7_m_c := 'true' }: BOOL ;	//高报标志
   lowWarn_flag { S7_m_c := 'true' }: BOOL ;	//低报标志
   lowAlarm_flag { S7_m_c := 'true' }: BOOL ;	//低低报标志
-END_VAR
-
-VAR_IN_OUT 
   highOverflow { S7_m_c := 'true' }: BOOL ;	//高溢出
   lowOverflow { S7_m_c := 'true' }: BOOL ;	//低溢出
   error { S7_m_c := 'true' }: BOOL ;	//错误
@@ -80,9 +55,10 @@ VAR
   lowAlarm_reset : "TOF";	
 END_VAR
 VAR_TEMP
-  analog_R : REAL ;	//模拟量实数值（非量程化）
-  range_raw : REAL ;	//量程宽度原始值
+  value_O : REAL ;	//模拟量测量值（线变前）
+  range_O : REAL ;	//模块量程宽度值（线变前）
   range : REAL ;	//量程宽度值
+  tempPV : REAL ;	//临时过程值
   highAlarm_H : REAL ;	//高高限死区高侧
   highAlarm_L : REAL ;	//高高限死区低侧
   highWarn_H : REAL ;	//高限死区高侧
@@ -91,28 +67,17 @@ VAR_TEMP
   lowWarn_L : REAL ;	//低限死区低侧
   lowAlarm_H : REAL ;	//低低限死区高侧
   lowAlarm_L : REAL ;	//低低限死区低侧
-  tempPV : REAL ;	//临时过程值
-  temp_TON : BOOL ;	//临时 延时接通 结果
 END_VAR
 BEGIN
-NETWORK
-TITLE =convert range
-//将量程转换为实数
-      L     #span_raw; 
-      L     #zero_raw; 
-      -I    ; 
-      ITD   ; 
-      DTR   ; 
-      T     #range_raw; 
-      NOP   0; 
 NETWORK
 TITLE =high overflow
 //上溢出报警
       L     #analog_raw; 
+      L     #overflow_radius; 
+      -I    ; 
       L     #span_raw; 
       >I    ; 
       =     #highOverflow; 
-      =     #error; 
       R     #lowOverflow; 
       R     #highAlarm_flag; 
       R     #highWarn_flag; 
@@ -122,10 +87,11 @@ NETWORK
 TITLE =low overflow
 //下溢出报警
       L     #analog_raw; 
+      L     #overflow_radius; 
+      +I    ; 
       L     #zero_raw; 
       <I    ; 
       =     #lowOverflow; 
-      =     #error; 
       R     #highOverflow; 
       R     #highAlarm_flag; 
       R     #highWarn_flag; 
@@ -135,26 +101,36 @@ NETWORK
 TITLE =compute
 //计算实际过程值
 //(analog_raw - zero_raw)/(span_raw - zero_raw)*   
-//(range_high - range_low) + range_low
+//(range_high - range_low) + range_low + offset
       AN    #highOverflow; 
       AN    #lowOverflow; 
       JNB   _001; //溢出不计算
 
-// 计算出量程的模拟值 
+// 线转前的测量值 
       L     #analog_raw; 
       L     #zero_raw; 
       -I    ; //量程原始值
       ITD   ; //转双整
       DTR   ; //转实数
-      T     #analog_R; //得到模拟值的非量程化值
+      T     #value_O; //得到模拟值的非量程化值
 
+// 线转前量程宽度
+      L     #span_raw; 
+      L     #zero_raw; 
+      -I    ; 
+      ITD   ; 
+      DTR   ; 
+      T     #range_O; 
+
+// 线转后量程宽度
       L     #range_high; 
       L     #range_low; 
       -R    ; 
-      T     #range; //得到量程宽度
+      T     #range; 
 
-      L     #analog_R; 
-      L     #range_raw; 
+// 计算过程值
+      L     #value_O; 
+      L     #range_O; 
       /R    ; //得到比例
       L     #range; 
       *R    ; 
@@ -167,7 +143,7 @@ TITLE =compute
 
       JU    _002; 
 
-_001: L     -1.000000e+005; //溢出时PV值设为-100000.0
+_001: L     #invalidValue; //溢出时PV值设为指定值
       T     #PV; 
 
 _002: NOP   0; 
@@ -215,7 +191,7 @@ TITLE =compute dead zone
       T     #lowAlarm_L; 
 NETWORK
 TITLE =para error
-//参数设置错误
+//参数设置错误或溢出
       O(    ; 
       L     #highAlarm_H; 
       L     #range_high; 
@@ -236,12 +212,12 @@ TITLE =para error
       L     #lowAlarm; 
       <R    ; 
       )     ; 
+      O     #highOverflow; 
+      O     #lowOverflow; 
       =     #error; 
 NETWORK
 TITLE =highAlarm
 //上上限报警
-      AN    #highOverflow; 
-      AN    #lowOverflow; 
       AN    #error; 
       A(    ; 
       L     #tempPV; 
@@ -249,16 +225,13 @@ TITLE =highAlarm
       >R    ; 
       )     ; 
       S     #trigger_highAlarm; 
-      S     #trigger_highWarn; 
       R     #trigger_lowAlarm; 
       R     #trigger_lowWarn; 
 NETWORK
 TITLE =highAlarm reset
 //上上限报警恢复
-      AN    #highOverflow; 
-      AN    #lowOverflow; 
-      AN    #error; 
-      A(    ; 
+      O     #error; 
+      O(    ; 
       L     #tempPV; 
       L     #highAlarm_L; 
       <R    ; 
@@ -267,8 +240,6 @@ TITLE =highAlarm reset
 NETWORK
 TITLE =highWarn
 //上限报警
-      AN    #highOverflow; 
-      AN    #lowOverflow; 
       AN    #error; 
       A(    ; 
       L     #tempPV; 
@@ -281,10 +252,8 @@ TITLE =highWarn
 NETWORK
 TITLE =highWarn reset
 //上限报警恢复
-      AN    #highOverflow; 
-      AN    #lowOverflow; 
-      AN    #error; 
-      A(    ; 
+      O     #error; 
+      O(    ; 
       L     #tempPV; 
       L     #highWarn_L; 
       <R    ; 
@@ -293,10 +262,7 @@ TITLE =highWarn reset
 NETWORK
 TITLE =lowWarn
 //下限报警
-      AN    #highOverflow; 
-      AN    #lowOverflow; 
       AN    #error; 
-
       A(    ; 
       L     #tempPV; 
       L     #lowWarn_L; 
@@ -308,11 +274,8 @@ TITLE =lowWarn
 NETWORK
 TITLE =lowWarn reset
 //下限报警恢复
-      AN    #highOverflow; 
-      AN    #lowOverflow; 
-      AN    #error; 
-
-      A(    ; 
+      O     #error; 
+      O(    ; 
       L     #tempPV; 
       L     #lowWarn_H; 
       >R    ; 
@@ -321,8 +284,6 @@ TITLE =lowWarn reset
 NETWORK
 TITLE =lowAlarm 
 //下下限报警
-      AN    #highOverflow; 
-      AN    #lowOverflow; 
       AN    #error; 
       A(    ; 
       L     #tempPV; 
@@ -330,23 +291,18 @@ TITLE =lowAlarm
       <R    ; 
       )     ; 
       S     #trigger_lowAlarm; 
-      S     #trigger_lowWarn; 
       R     #trigger_highAlarm; 
       R     #trigger_highWarn; 
-
 NETWORK
 TITLE =lowAlarm reset
 //下下限报警 恢复
-      AN    #highOverflow; 
-      AN    #lowOverflow; 
-      AN    #error; 
-      A(    ; 
+      O     #error; 
+      O(    ; 
       L     #tempPV; 
       L     #lowAlarm_H; 
       >R    ; 
       )     ; 
       R     #trigger_lowAlarm; 
-
 NETWORK
 TITLE =skip fault tolerance time
 //无容错时间，则直接将报警触发值赋与报警标志值
@@ -372,74 +328,59 @@ ftt:  NOP   0;
 
       CALL #highAlarm_set (//延时置位高高报
            IN                       := #trigger_highAlarm,
-           PT                       := #fault_tolerance_time,
-           Q                        := #temp_TON);
+           PT                       := #fault_tolerance_time);
 
-      A     #temp_TON; 
+      A     #highAlarm_set.Q; 
       S     #highAlarm_flag; 
 
       CALL #highAlarm_reset (//延时复位高高报
            IN                       := #trigger_highAlarm,
-           PT                       := #fault_tolerance_time,
-           Q                        := #temp_TON);
+           PT                       := #fault_tolerance_time);
 
-      AN    #temp_TON; 
+      AN    #highAlarm_reset.Q; 
       R     #highAlarm_flag; 
 
       CALL #highWarn_set (//延时置位高报
            IN                       := #trigger_highWarn,
-           PT                       := #fault_tolerance_time,
-           Q                        := #temp_TON);
+           PT                       := #fault_tolerance_time);
 
-      A     #temp_TON; 
+      A     #highWarn_set.Q; 
       S     #highWarn_flag; 
 
       CALL #highWarn_reset (//延时复位高报
            IN                       := #trigger_highWarn,
-           PT                       := #fault_tolerance_time,
-           Q                        := #temp_TON);
+           PT                       := #fault_tolerance_time);
 
-      AN    #temp_TON; 
+      AN    #highWarn_reset.Q; 
       R     #highWarn_flag; 
 
       CALL #lowWarn_set (//延时置位低报
            IN                       := #trigger_lowWarn,
-           PT                       := #fault_tolerance_time,
-           Q                        := #temp_TON);
+           PT                       := #fault_tolerance_time);
 
-      A     #temp_TON; 
+      A     #lowWarn_set.Q; 
       S     #lowWarn_flag; 
 
       CALL #lowWarn_reset (//延时复位低报
            IN                       := #trigger_lowWarn,
-           PT                       := #fault_tolerance_time,
-           Q                        := #temp_TON);
+           PT                       := #fault_tolerance_time);
 
-      AN    #temp_TON; 
+      AN    #lowWarn_reset.Q; 
       R     #lowWarn_flag; 
 
       CALL #lowAlarm_set (//延时置位低低报
            IN                       := #trigger_lowAlarm,
-           PT                       := #fault_tolerance_time,
-           Q                        := #temp_TON);
+           PT                       := #fault_tolerance_time);
 
-      A     #temp_TON; 
+      A     #lowAlarm_set.Q; 
       S     #lowAlarm_flag; 
 
       CALL #lowAlarm_reset (//延时复位低低报
            IN                       := #trigger_lowAlarm,
-           PT                       := #fault_tolerance_time,
-           Q                        := #temp_TON);
+           PT                       := #fault_tolerance_time);
 
-      AN    #temp_TON; 
+      AN    #lowAlarm_reset.Q; 
       R     #lowAlarm_flag; 
-NETWORK
-TITLE =清除标志
-
-clrf: A     #error; 
-      R     #trigger_highAlarm; 
-      R     #trigger_highWarn; 
-      R     #trigger_lowWarn; 
-      R     #trigger_lowAlarm; 
+clrf: NOP   0; 
 END_FUNCTION_BLOCK
 
