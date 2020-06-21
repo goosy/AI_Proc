@@ -1,50 +1,49 @@
-FUNCTION_BLOCK "AI_CVTR"
+FUNCTION_BLOCK "AI_Proc"
 TITLE =AI Converter
-//Ä£ÄâÁ¿×ª»»º¯Êı
+//æ¨¡æ‹Ÿé‡è½¬æ¢å‡½æ•°
 //
-// ²½Öè£º
-// 1. ÏÈ½¨Á¢Ò»¸ö·ûºÅÃûÎª"AI_Proc"µÄ¿ÕFB¿é
-// 2. ÒıÈëÏµÍ³¿é SFB4"TON" ºÍ SFB5"TOF"
-// 3. È»ºó±àÒë±¾´úÂë
+// æ­¥éª¤ï¼š
+// 1. å…ˆå»ºç«‹ä¸€ä¸ªç¬¦å·åä¸º"AI_Proc"çš„ç©ºFBå—
+// 2. å¼•å…¥ç³»ç»Ÿå— SFB4"TON" å’Œ SFB5"TOF"
+// 3. ç„¶åç¼–è¯‘æœ¬ä»£ç 
 //
-{ S7_m_c := 'true' }
+{ S7_m_c := 'TRUE' }
 AUTHOR : goosy
-NAME : AI_CVTR
+NAME : AI_Proc
 VERSION : 0.1
 
-
 VAR_INPUT
-  analog_raw { S7_m_c := 'true' }: INT ;	//Ä£ÄâÁ¿²É¼¯Öµ
-  zero_raw { S7_m_c := 'true' }: INT ;	//±äËÍÆ÷ÁãµãÔ­Ê¼Öµ£¨4mA¶ÔÓ¦ÊıÖµ£©0
-  span_raw { S7_m_c := 'true' }: INT  := 27648;	//±äËÍÆ÷¼«ÖµÔ­Ê¼Öµ£¨20mA¶ÔÓ¦ÊıÖµ£©27648
-  overflow_radius { S7_m_c := 'true' }: INT  := 500;	// Òç³ö°ë¾¶
-  range_low { S7_m_c := 'true' }: REAL ;	//Á¿³ÌµÍÖµ
-  range_high { S7_m_c := 'true' }: REAL  := 1.000000e+002;	//Á¿³Ì¸ßÖµ
-  offset { S7_m_c := 'true' }: REAL ;	//Æ«ÖÃÖµ
-  invalidValue { S7_m_c := 'true' }: REAL  := -1.000000e+006;	// ÎŞĞ§ÊäÈëÊ±Ö¸¶¨Êä³öÖµ
-  highAlarm { S7_m_c := 'true' }: REAL  := 8.000000e+001;	//¸ß¸ß±¨Éè¶¨Öµ
-  highWarn { S7_m_c := 'true' }: REAL  := 7.000000e+001;	//¸ß±¨Éè¶¨Öµ
-  lowWarn { S7_m_c := 'true' }: REAL  := 2.000000e+000;	//µÍ±¨Éè¶¨Öµ
-  lowAlarm { S7_m_c := 'true' }: REAL  := 1.000000e+000;	//µÍµÍ±¨Éè¶¨Öµ
-  dead_zone_radius { S7_m_c := 'true' }: REAL  := 5.000000e-001;	//ËÀÇø°ë¾¶ £¨¸³Öµ0.0Ê±ÎŞËÀÇø£©
-  fault_tolerance_time { S7_m_c := 'true' }: TIME ;	//Èİ´íÊ±¼ä (µ¥Î»ºÁÃë ¸³ÖµT#0MSÊ±ÎŞÈİ´íÊ±¼ä)
+  analog_raw { S7_m_c := 'TRUE' }: INT ;	//æ¨¡æ‹Ÿé‡é‡‡é›†å€¼
+  zero_raw { S7_m_c := 'TRUE' }: INT ;	//å˜é€å™¨é›¶ç‚¹åŸå§‹å€¼ï¼ˆ4mAå¯¹åº”æ•°å€¼ï¼‰0
+  span_raw { S7_m_c := 'TRUE' }: INT  := 27648;	//å˜é€å™¨æå€¼åŸå§‹å€¼ï¼ˆ20mAå¯¹åº”æ•°å€¼ï¼‰27648
+  overflow_radius { S7_m_c := 'TRUE' }: INT  := 500;	// æº¢å‡ºåŠå¾„
+  range_low { S7_m_c := 'TRUE' }: REAL ;	//é‡ç¨‹ä½å€¼
+  range_high { S7_m_c := 'TRUE' }: REAL  := 1.000000e+002;	//é‡ç¨‹é«˜å€¼
+  offset { S7_m_c := 'TRUE' }: REAL ;	//åç½®å€¼
+  invalidValue { S7_m_c := 'TRUE' }: REAL  := -1.000000e+006;	// æ— æ•ˆè¾“å…¥æ—¶æŒ‡å®šè¾“å‡ºå€¼
+  highAlarm { S7_m_c := 'TRUE' }: REAL  := 8.000000e+001;	//é«˜é«˜æŠ¥è®¾å®šå€¼
+  highWarn { S7_m_c := 'TRUE' }: REAL  := 7.000000e+001;	//é«˜æŠ¥è®¾å®šå€¼
+  lowWarn { S7_m_c := 'TRUE' }: REAL  := 2.000000e+000;	//ä½æŠ¥è®¾å®šå€¼
+  lowAlarm { S7_m_c := 'TRUE' }: REAL  := 1.000000e+000;	//ä½ä½æŠ¥è®¾å®šå€¼
+  dead_zone_radius { S7_m_c := 'TRUE' }: REAL  := 5.000000e-001;	//æ­»åŒºåŠå¾„ ï¼ˆèµ‹å€¼0.0æ—¶æ— æ­»åŒºï¼‰
+  fault_tolerance_time { S7_m_c := 'TRUE' }: TIME ;	//å®¹é”™æ—¶é—´ (å•ä½æ¯«ç§’ èµ‹å€¼T#0MSæ—¶æ— å®¹é”™æ—¶é—´)
 END_VAR
 VAR_OUTPUT
-  PV { S7_m_c := 'true' }: REAL ;	//²É¼¯Á¿¹¤³Ìµ¥Î»ÊıÖµ
-  highAlarm_flag { S7_m_c := 'true' }: BOOL ;	//¸ß¸ß±¨±êÖ¾
-  highWarn_flag { S7_m_c := 'true' }: BOOL ;	//¸ß±¨±êÖ¾
-  lowWarn_flag { S7_m_c := 'true' }: BOOL ;	//µÍ±¨±êÖ¾
-  lowAlarm_flag { S7_m_c := 'true' }: BOOL ;	//µÍµÍ±¨±êÖ¾
-  highOverflow { S7_m_c := 'true' }: BOOL ;	//¸ßÒç³ö
-  lowOverflow { S7_m_c := 'true' }: BOOL ;	//µÍÒç³ö
-  error { S7_m_c := 'true' }: BOOL ;	//´íÎó
-  reserve { S7_m_c := 'true' }: BOOL ;	//Ô¤Áô
+  PV { S7_m_c := 'TRUE' }: REAL ;	//é‡‡é›†é‡å·¥ç¨‹å•ä½æ•°å€¼
+  highAlarm_flag { S7_m_c := 'TRUE' }: BOOL ;	//é«˜é«˜æŠ¥æ ‡å¿—
+  highWarn_flag { S7_m_c := 'TRUE' }: BOOL ;	//é«˜æŠ¥æ ‡å¿—
+  lowWarn_flag { S7_m_c := 'TRUE' }: BOOL ;	//ä½æŠ¥æ ‡å¿—
+  lowAlarm_flag { S7_m_c := 'TRUE' }: BOOL ;	//ä½ä½æŠ¥æ ‡å¿—
+  highOverflow { S7_m_c := 'TRUE' }: BOOL ;	//é«˜æº¢å‡º
+  lowOverflow { S7_m_c := 'TRUE' }: BOOL ;	//ä½æº¢å‡º
+  error { S7_m_c := 'TRUE' }: BOOL ;	//é”™è¯¯
+  reserve { S7_m_c := 'TRUE' }: BOOL ;	//é¢„ç•™
 END_VAR
 VAR
-  trigger_highAlarm : BOOL ;	//´¥·¢¸ß¸ß±¨
-  trigger_highWarn : BOOL ;	//´¥·¢¸ß±¨
-  trigger_lowWarn : BOOL ;	//´¥·¢µÍ±¨
-  trigger_lowAlarm : BOOL ;	//´¥·¢µÍµÍ±¨
+  trigger_highAlarm : BOOL ;	//è§¦å‘é«˜é«˜æŠ¥
+  trigger_highWarn : BOOL ;	//è§¦å‘é«˜æŠ¥
+  trigger_lowWarn : BOOL ;	//è§¦å‘ä½æŠ¥
+  trigger_lowAlarm : BOOL ;	//è§¦å‘ä½ä½æŠ¥
   highAlarm_set : "TON";	
   highAlarm_reset : "TOF";	
   highWarn_set : "TON";	
@@ -55,23 +54,23 @@ VAR
   lowAlarm_reset : "TOF";	
 END_VAR
 VAR_TEMP
-  value_O : REAL ;	//Ä£ÄâÁ¿²âÁ¿Öµ£¨Ïß±äÇ°£©
-  range_O : REAL ;	//Ä£¿éÁ¿³Ì¿í¶ÈÖµ£¨Ïß±äÇ°£©
-  range : REAL ;	//Á¿³Ì¿í¶ÈÖµ
-  tempPV : REAL ;	//ÁÙÊ±¹ı³ÌÖµ
-  highAlarm_H : REAL ;	//¸ß¸ßÏŞËÀÇø¸ß²à
-  highAlarm_L : REAL ;	//¸ß¸ßÏŞËÀÇøµÍ²à
-  highWarn_H : REAL ;	//¸ßÏŞËÀÇø¸ß²à
-  highWarn_L : REAL ;	//¸ßÏŞËÀÇøµÍ²à
-  lowWarn_H : REAL ;	//µÍÏŞËÀÇø¸ß²à
-  lowWarn_L : REAL ;	//µÍÏŞËÀÇøµÍ²à
-  lowAlarm_H : REAL ;	//µÍµÍÏŞËÀÇø¸ß²à
-  lowAlarm_L : REAL ;	//µÍµÍÏŞËÀÇøµÍ²à
+  value_O : REAL ;	//æ¨¡æ‹Ÿé‡æµ‹é‡å€¼ï¼ˆçº¿å˜å‰ï¼‰
+  range_O : REAL ;	//æ¨¡å—é‡ç¨‹å®½åº¦å€¼ï¼ˆçº¿å˜å‰ï¼‰
+  range : REAL ;	//é‡ç¨‹å®½åº¦å€¼
+  tempPV : REAL ;	//ä¸´æ—¶è¿‡ç¨‹å€¼
+  highAlarm_H : REAL ;	//é«˜é«˜é™æ­»åŒºé«˜ä¾§
+  highAlarm_L : REAL ;	//é«˜é«˜é™æ­»åŒºä½ä¾§
+  highWarn_H : REAL ;	//é«˜é™æ­»åŒºé«˜ä¾§
+  highWarn_L : REAL ;	//é«˜é™æ­»åŒºä½ä¾§
+  lowWarn_H : REAL ;	//ä½é™æ­»åŒºé«˜ä¾§
+  lowWarn_L : REAL ;	//ä½é™æ­»åŒºä½ä¾§
+  lowAlarm_H : REAL ;	//ä½ä½é™æ­»åŒºé«˜ä¾§
+  lowAlarm_L : REAL ;	//ä½ä½é™æ­»åŒºä½ä¾§
 END_VAR
 BEGIN
 NETWORK
 TITLE =high overflow
-//ÉÏÒç³ö±¨¾¯
+//ä¸Šæº¢å‡ºæŠ¥è­¦
       L     #analog_raw; 
       L     #overflow_radius; 
       -I    ; 
@@ -85,7 +84,7 @@ TITLE =high overflow
       R     #lowWarn_flag; 
 NETWORK
 TITLE =low overflow
-//ÏÂÒç³ö±¨¾¯
+//ä¸‹æº¢å‡ºæŠ¥è­¦
       L     #analog_raw; 
       L     #overflow_radius; 
       +I    ; 
@@ -99,22 +98,22 @@ TITLE =low overflow
       R     #lowAlarm_flag; 
 NETWORK
 TITLE =compute
-//¼ÆËãÊµ¼Ê¹ı³ÌÖµ
+//è®¡ç®—å®é™…è¿‡ç¨‹å€¼
 //(analog_raw - zero_raw)/(span_raw - zero_raw)*   
 //(range_high - range_low) + range_low + offset
       AN    #highOverflow; 
       AN    #lowOverflow; 
-      JNB   _001; //Òç³ö²»¼ÆËã
+      JNB   _001; //æº¢å‡ºä¸è®¡ç®—
 
-// Ïß×ªÇ°µÄ²âÁ¿Öµ 
+// çº¿è½¬å‰çš„æµ‹é‡å€¼ 
       L     #analog_raw; 
       L     #zero_raw; 
-      -I    ; //Á¿³ÌÔ­Ê¼Öµ
-      ITD   ; //×ªË«Õû
-      DTR   ; //×ªÊµÊı
-      T     #value_O; //µÃµ½Ä£ÄâÖµµÄ·ÇÁ¿³Ì»¯Öµ
+      -I    ; //é‡ç¨‹åŸå§‹å€¼
+      ITD   ; //è½¬åŒæ•´
+      DTR   ; //è½¬å®æ•°
+      T     #value_O; //å¾—åˆ°æ¨¡æ‹Ÿå€¼çš„éé‡ç¨‹åŒ–å€¼
 
-// Ïß×ªÇ°Á¿³Ì¿í¶È
+// çº¿è½¬å‰é‡ç¨‹å®½åº¦
       L     #span_raw; 
       L     #zero_raw; 
       -I    ; 
@@ -122,34 +121,34 @@ TITLE =compute
       DTR   ; 
       T     #range_O; 
 
-// Ïß×ªºóÁ¿³Ì¿í¶È
+// çº¿è½¬åé‡ç¨‹å®½åº¦
       L     #range_high; 
       L     #range_low; 
       -R    ; 
       T     #range; 
 
-// ¼ÆËã¹ı³ÌÖµ
+// è®¡ç®—è¿‡ç¨‹å€¼
       L     #value_O; 
       L     #range_O; 
-      /R    ; //µÃµ½±ÈÀı
+      /R    ; //å¾—åˆ°æ¯”ä¾‹
       L     #range; 
       *R    ; 
       L     #range_low; 
       +R    ; 
       L     #offset; 
       +R    ; 
-      T     #PV; //µÃµ½×îÖÕ¹ı³ÌÖµ
+      T     #PV; //å¾—åˆ°æœ€ç»ˆè¿‡ç¨‹å€¼
       T     #tempPV; 
 
       JU    _002; 
 
-_001: L     #invalidValue; //Òç³öÊ±PVÖµÉèÎªÖ¸¶¨Öµ
+_001: L     #invalidValue; //æº¢å‡ºæ—¶PVå€¼è®¾ä¸ºæŒ‡å®šå€¼
       T     #PV; 
 
 _002: NOP   0; 
 NETWORK
 TITLE =compute dead zone
-//¼ÆËãËÀÇøÖµ
+//è®¡ç®—æ­»åŒºå€¼
       L     #highAlarm; 
       L     #dead_zone_radius; 
       +R    ; 
@@ -191,7 +190,7 @@ TITLE =compute dead zone
       T     #lowAlarm_L; 
 NETWORK
 TITLE =para error
-//²ÎÊıÉèÖÃ´íÎó»òÒç³ö
+//å‚æ•°è®¾ç½®é”™è¯¯æˆ–æº¢å‡º
       O(    ; 
       L     #highAlarm_H; 
       L     #range_high; 
@@ -217,7 +216,7 @@ TITLE =para error
       =     #error; 
 NETWORK
 TITLE =highAlarm
-//ÉÏÉÏÏŞ±¨¾¯
+//ä¸Šä¸Šé™æŠ¥è­¦
       AN    #error; 
       A(    ; 
       L     #tempPV; 
@@ -229,7 +228,7 @@ TITLE =highAlarm
       R     #trigger_lowWarn; 
 NETWORK
 TITLE =highAlarm reset
-//ÉÏÉÏÏŞ±¨¾¯»Ö¸´
+//ä¸Šä¸Šé™æŠ¥è­¦æ¢å¤
       O     #error; 
       O(    ; 
       L     #tempPV; 
@@ -239,7 +238,7 @@ TITLE =highAlarm reset
       R     #trigger_highAlarm; 
 NETWORK
 TITLE =highWarn
-//ÉÏÏŞ±¨¾¯
+//ä¸Šé™æŠ¥è­¦
       AN    #error; 
       A(    ; 
       L     #tempPV; 
@@ -251,7 +250,7 @@ TITLE =highWarn
       R     #trigger_lowWarn; 
 NETWORK
 TITLE =highWarn reset
-//ÉÏÏŞ±¨¾¯»Ö¸´
+//ä¸Šé™æŠ¥è­¦æ¢å¤
       O     #error; 
       O(    ; 
       L     #tempPV; 
@@ -261,7 +260,7 @@ TITLE =highWarn reset
       R     #trigger_highWarn; 
 NETWORK
 TITLE =lowWarn
-//ÏÂÏŞ±¨¾¯
+//ä¸‹é™æŠ¥è­¦
       AN    #error; 
       A(    ; 
       L     #tempPV; 
@@ -273,7 +272,7 @@ TITLE =lowWarn
       R     #trigger_highWarn; 
 NETWORK
 TITLE =lowWarn reset
-//ÏÂÏŞ±¨¾¯»Ö¸´
+//ä¸‹é™æŠ¥è­¦æ¢å¤
       O     #error; 
       O(    ; 
       L     #tempPV; 
@@ -283,7 +282,7 @@ TITLE =lowWarn reset
       R     #trigger_lowWarn; 
 NETWORK
 TITLE =lowAlarm 
-//ÏÂÏÂÏŞ±¨¾¯
+//ä¸‹ä¸‹é™æŠ¥è­¦
       AN    #error; 
       A(    ; 
       L     #tempPV; 
@@ -295,7 +294,7 @@ TITLE =lowAlarm
       R     #trigger_highWarn; 
 NETWORK
 TITLE =lowAlarm reset
-//ÏÂÏÂÏŞ±¨¾¯ »Ö¸´
+//ä¸‹ä¸‹é™æŠ¥è­¦ æ¢å¤
       O     #error; 
       O(    ; 
       L     #tempPV; 
@@ -305,7 +304,7 @@ TITLE =lowAlarm reset
       R     #trigger_lowAlarm; 
 NETWORK
 TITLE =skip fault tolerance time
-//ÎŞÈİ´íÊ±¼ä£¬ÔòÖ±½Ó½«±¨¾¯´¥·¢Öµ¸³Óë±¨¾¯±êÖ¾Öµ
+//æ— å®¹é”™æ—¶é—´ï¼Œåˆ™ç›´æ¥å°†æŠ¥è­¦è§¦å‘å€¼èµ‹ä¸æŠ¥è­¦æ ‡å¿—å€¼
       L     #fault_tolerance_time; 
       L     L#0; 
       ==D   ; 
@@ -323,59 +322,59 @@ TITLE =skip fault tolerance time
       JU    clrf; 
 NETWORK
 TITLE =fault tolerance time
-//½øĞĞÊ±¼äÈİ´í´¦Àí
+//è¿›è¡Œæ—¶é—´å®¹é”™å¤„ç†
 ftt:  NOP   0; 
 
-      CALL #highAlarm_set (//ÑÓÊ±ÖÃÎ»¸ß¸ß±¨
+      CALL #highAlarm_set (//å»¶æ—¶ç½®ä½é«˜é«˜æŠ¥
            IN                       := #trigger_highAlarm,
            PT                       := #fault_tolerance_time);
 
       A     #highAlarm_set.Q; 
       S     #highAlarm_flag; 
 
-      CALL #highAlarm_reset (//ÑÓÊ±¸´Î»¸ß¸ß±¨
+      CALL #highAlarm_reset (//å»¶æ—¶å¤ä½é«˜é«˜æŠ¥
            IN                       := #trigger_highAlarm,
            PT                       := #fault_tolerance_time);
 
       AN    #highAlarm_reset.Q; 
       R     #highAlarm_flag; 
 
-      CALL #highWarn_set (//ÑÓÊ±ÖÃÎ»¸ß±¨
+      CALL #highWarn_set (//å»¶æ—¶ç½®ä½é«˜æŠ¥
            IN                       := #trigger_highWarn,
            PT                       := #fault_tolerance_time);
 
       A     #highWarn_set.Q; 
       S     #highWarn_flag; 
 
-      CALL #highWarn_reset (//ÑÓÊ±¸´Î»¸ß±¨
+      CALL #highWarn_reset (//å»¶æ—¶å¤ä½é«˜æŠ¥
            IN                       := #trigger_highWarn,
            PT                       := #fault_tolerance_time);
 
       AN    #highWarn_reset.Q; 
       R     #highWarn_flag; 
 
-      CALL #lowWarn_set (//ÑÓÊ±ÖÃÎ»µÍ±¨
+      CALL #lowWarn_set (//å»¶æ—¶ç½®ä½ä½æŠ¥
            IN                       := #trigger_lowWarn,
            PT                       := #fault_tolerance_time);
 
       A     #lowWarn_set.Q; 
       S     #lowWarn_flag; 
 
-      CALL #lowWarn_reset (//ÑÓÊ±¸´Î»µÍ±¨
+      CALL #lowWarn_reset (//å»¶æ—¶å¤ä½ä½æŠ¥
            IN                       := #trigger_lowWarn,
            PT                       := #fault_tolerance_time);
 
       AN    #lowWarn_reset.Q; 
       R     #lowWarn_flag; 
 
-      CALL #lowAlarm_set (//ÑÓÊ±ÖÃÎ»µÍµÍ±¨
+      CALL #lowAlarm_set (//å»¶æ—¶ç½®ä½ä½ä½æŠ¥
            IN                       := #trigger_lowAlarm,
            PT                       := #fault_tolerance_time);
 
       A     #lowAlarm_set.Q; 
       S     #lowAlarm_flag; 
 
-      CALL #lowAlarm_reset (//ÑÓÊ±¸´Î»µÍµÍ±¨
+      CALL #lowAlarm_reset (//å»¶æ—¶å¤ä½ä½ä½æŠ¥
            IN                       := #trigger_lowAlarm,
            PT                       := #fault_tolerance_time);
 
