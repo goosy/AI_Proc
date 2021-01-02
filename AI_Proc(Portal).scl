@@ -1,8 +1,8 @@
 ﻿FUNCTION_BLOCK "AI_Proc"
 { S7_Optimized_Access := 'FALSE' }
-VERSION : 0.1
+VERSION : 0.2
     VAR_INPUT 
-        analog_raw : Int;   // 模拟量采集值
+        analog_raw : Int;   // 模拟量采集值, 输入是PIW时最好定义一个Int类型符号以免除转换
         zero_raw : Int;   // 变送器零点原始值（4mA对应数值）0
         span_raw : Int := 27648;   // 变送器极值原始值（20mA对应数值）27648
         overflow_radius : Int := 500;   // 溢出半径
@@ -101,12 +101,12 @@ BEGIN
     #lowAlarm_L := #lowAlarm - #dead_zone_radius;
     
     //参数设置错误或溢出
-    #error := (#highAlarm_H > #range_high)
-    OR (#lowAlarm_L < #range_low)
-    OR (#highWarn > #highAlarm)
-    OR (#lowWarn < #lowAlarm)
+    #error := (#highWarn > #highAlarm)
+    OR (#lowWarn > #highWarn)
+    OR (#lowAlarm > #lowWarn)
     OR #highOverflow
     OR #lowOverflow;
+    
     
     //上上限报警
     IF NOT #error AND (#tempPV > #highAlarm_H) THEN
