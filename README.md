@@ -4,91 +4,98 @@
 
 - 用于博途的SCL源码：AI_Proc(Portal).scl
 - 用于Step7的SCL源码：AI_Proc(step7).scl
-- 用于Step7的STL源码：AI_Proc.AWL
 
 ## 调用示例
 
 调用时，先建立对应的背景数据块，比如"TIT001"，调用时所有参数可省略，直接操纵背景块。
 
+注：下方_name_表示具体变量
+
 1. 在 TIA Portal 中调用示例：
 
     ```Pascal
-    "TIT001"(analog_raw:="AI01-1",        // %IW256:P 通道输入值
-             zero_raw:=0,                 // 变送器零点原始值（4mA对应数值）0
-             span_raw:=27648,             // 变送器极值原始值（20mA对应数值）27648
-             overflow_radius:=500,        // 指定溢出的容错值 默认500
-             range_low:=0.0,              // 量程低值
-             range_high:=100.0,           // 量程高值
-             offset:=0.0,                 // 偏置值
-             invalidValue:=-1000000.0,    // 无效输入时指定输出值,比如回路断线
-             highAlarm:=80.0,             // 高高报设定值
-             highWarn:=70.0,              // 高报设定值
-             lowWarn:=2.0,                // 低报设定值
-             lowAlarm:=1.0,               // 低低报设定值
-             dead_zone_radius:=0.5,       // 死区半径 (赋值0.0时无死区)
-             fault_tolerance_time:=T#0MS, // 容错时间 (单位毫秒 赋值T#0MS时无容错时间)
-             PV=>_real_out_,              // 采集量工程单位数值
-             highAlarm_flag=>_bool_out_,  // 高高报标志
-             highWarn_flag=>_bool_out_,   // 高报标志
-             lowWarn_flag=>_bool_out_,    // 低报标志
-             lowAlarm_flag=>_bool_out_,   // 低低报标志
-             highOverflow=>_bool_out_,    // 高溢出
-             lowOverflow=>_bool_out_,     // 低溢出
-             error=>_bool_out_);          // 错误
+    "TIT001"(AI:=0,                     // 模块采集值, 最好定义一个对应PIW通道的Int类型符号，以免除转换
+             AI_zero:=0,                // 模块零点值（4mA对应数值）0
+             AI_span:=27648,            // 模块量程值（20mA对应数值）27648
+             overflow_SP:=28000,        // 上溢出值
+             underflow_SP:=-500,        // 下溢出值
+             zero:=0.0,                 // 量程低值
+             span:=100.0,               // 量程高值
+             invalid_value:=-1000000.0, // 无效输入时指定输出值
+             AH:=80.0,                  // 高高报设定值
+             WH:=70.0,                  // 高报设定值
+             WL:=2.0,                   // 低报设定值
+             AL:=1.0,                   // 低低报设定值
+             dead_zone:=0.5,            // 死区 （赋值0.0时无死区）
+             FT_time:=T#0MS,            // 容错时间 (单位毫秒 赋值T#0MS时无容错时间)
+             PV=>_real_out_,            // 采集量工程单位数值
+             AH_flag=>_bool_out_,       // 高高报标志
+             WH_flag=>_bool_out_,       // 高报标志
+             WL_flag=>_bool_out_,       // 低报标志
+             AL_flag=>_bool_out_,       // 低低报标志
+             invalid=>_bool_out_,       // 数据无效，即 AI_error OR overflow OR underflow
+             AI_error=>_bool_out_,      // 非测量输入，比如断线
+             overflow=>_bool_out_,      // 高溢出
+             underflow=>_bool_out_,     // 低溢出
+             SP_error=>_bool_out_);     // 设置错误
     ```
 
-1. 在 Step7 V5.5 中调用SCL示例：
+1. 在 Step7 V5.5 中SCL调用示例：
 
     ```Pascal
     AI_Proc.TIT001(
-         analog_raw          := PIW256,      // 通道输入值
-         zero_raw            := ,            // 变送器零点原始值（4mA对应数值）0
-         span_raw            := ,            // 变送器极值原始值（20mA对应数值）27648
-         overflow_radius     := ,            // 指定溢出的容错值 默认500
-         range_low           := ,            // 量程低值
-         range_high          := ,            // 量程高值
-         offset              := ,            // 偏置值
-         invalidValue        := ,            // 无效输入时指定输出值,比如回路断线
-         highAlarm           := ,            // 高高报设定值
-         highWarn            := ,            // 高报设定值
-         lowWarn             := ,            // 低报设定值
-         lowAlarm            := ,            // 低低报设定值
-         dead_zone_radius    := ,            // 死区半径 (赋值0.0时无死区)
-         fault_tolerance_time:= )            // 容错时间 (单位毫秒 赋值T#0MS时无容错时间)
-    PV := TIT001.PV                          //采集量工程单位数值
-    highAlarm_flag := TIT001.highAlarm_flag; //高高报标志
-    highWarn_flag := TIT001.highWarn_flag;   //高报标志
-    lowWarn_flag := TIT001.lowWarn_flag;     //低报标志
-    lowAlarm_flag := TIT001.lowAlarm_flag;   //低低报标志
-    highOverflow := TIT001.highOverflow;     //高溢出
-    lowOverflow := TIT001.lowOverflow;       //低溢出
-    error := TIT001.error;                   //错误
+        AI                  := WORD_TO_INT(PIW256),      // 通道输入值，最好定义一个INT类型的PIW符号可不用转换
+        AI_zero             := 0,                        // 通道零点值（4mA对应数值）0
+        AI_span             := 27648,                    // 通道量程值（20mA对应数值）27648
+        overflow_SP         := 28000,                    // 指定上溢出的容错通道值 默认28000
+        underflow_SP        := -500,                     // 指定下溢出的容错通道值 默认-500
+        zero                := 0.0,                      // 零点值
+        span                := 100.0,                    // 量值
+        invalid_value       := -1000000.0,               // 无效输入时指定输出值,比如回路断线
+        AH                  := 100.0,                    // 高高报设定值
+        WH                  := 100.0,                    // 高报设定值
+        WL                  := 0.0,                      // 低报设定值
+        AL                  := 0.0,                      // 低低报设定值
+        dead_zone           := 0.5,                      // 死区 (赋值0.0时无死区)
+        FT_time             := T#0MS)                    // 容错时间 (单位毫秒 赋值T#0MS时无容错时间)
+    _real_out_ := TIT001.PV                              // 采集量工程单位数值
+    _bool_out_ := TIT001.AH_flag;                        // 高高报标志
+    _bool_out_ := TIT001.WH_flag;                        // 高报标志
+    _bool_out_ := TIT001.WL_flag;                        // 低报标志
+    _bool_out_ := TIT001.AL_flag;                        // 低低报标志
+    _bool_out_ := TIT001.invalid                         // 数据无效
+    _bool_out_ := TIT001.AI_error                        // 测量出错，比如断线
+    _bool_out_ := TIT001.overflow;                       // 高溢出
+    _bool_out_ := TIT001.underflow;                      // 低溢出
+    _bool_out_ := TIT001.SP_error;                       // 报警值设置错误
     ```
 
-1. 在 Step7 V5.5 中调用STL示例：
+1. 在 Step7 V5.5 中STL调用示例：
 
     ```Pascal
     CALL  "AI_Proc" , "TIT001"(
-       analog_raw          := PIW256, // 可只赋参数
-       zero_raw            := , // 变送器零点原始值（4mA对应数值）0
-       span_raw            := , // 变送器极值原始值（20mA对应数值）27648
-       overflow_radius     := , // 指定溢出的容错值 默认500
-       range_low           := , // 量程低值
-       range_high          := , // 量程高值
-       offset              := , // 偏置值
-       invalidValue        := , // 无效输入时指定输出值,比如回路断线
-       highAlarm           := , // 高高报设定值
-       highWarn            := , // 高报设定值
-       lowWarn             := , // 低报设定值
-       lowAlarm            := , // 低低报设定值
-       dead_zone_radius    := , // 死区半径 (赋值0.0时无死区)
-       fault_tolerance_time:= , // 容错时间 (单位毫秒 赋值T#0MS时无容错时间)
-       PV                  := , // 采集量工程单位数值
-       highAlarm_flag      := , // 高高报标志
-       highWarn_flag       := , // 高报标志
-       lowWarn_flag        := , // 低报标志
-       lowAlarm_flag       := , // 低低报标志
-       highOverflow        := , // 高溢出
-       lowOverflow         := , // 低溢出
-       error               := ) // 错误
+        AI                  := PIW256,            // 通道输入值，最好定义一个INT类型的PIW符号可不用转换
+        AI_zero             := 0,                 // 通道零点值（4mA对应数值）0
+        AI_span             := 27648,             // 通道量程值（20mA对应数值）27648
+        overflow_SP         := 28000,             // 指定上溢出的容错通道值 默认28000
+        underflow_SP        := -500,              // 指定下溢出的容错通道值 默认-500
+        zero                := 0.0,               // 零点值
+        span                := 100.0,             // 量值
+        invalid_value       := -1000000.0,        // 无效输入时指定输出值,比如回路断线
+        AH                  := 100.0,             // 高高报设定值
+        WH                  := 100.0,             // 高报设定值
+        WL                  := 0.0,               // 低报设定值
+        AL                  := 0.0,               // 低低报设定值
+        dead_zone           := 0.5,               // 死区 (赋值0.0时无死区)
+        FT_time             := T#0MS,             // 容错时间 (单位毫秒 赋值T#0MS时无容错时间)
+        PV                  := _real_out_,        // 采集量工程单位数值
+        AH_flag             := _bool_out_,        // 高高报标志
+        WH_flag             := _bool_out_,        // 高报标志
+        WL_flag             := _bool_out_,        // 低报标志
+        AL_flag             := _bool_out_,        // 低低报标志
+        invalid             := _bool_out_,        // 数据无效
+        AI_error            := _bool_out_,        // 测量出错，比如断线
+        overflow            := _bool_out_,        // 高溢出
+        underflow           := _bool_out_,        // 低溢出
+        SP_error            := _bool_out_);       // 报警值设置错误
     ```
