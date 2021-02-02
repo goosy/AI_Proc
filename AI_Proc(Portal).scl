@@ -3,17 +3,17 @@
 VERSION : 0.1
    VAR_INPUT 
       AI : Int;   // 通道输入值, 一般定义一个INT类型的符号
-      AI_zero : Int := #S7_ZERO;   // 通道零点值（4mA对应数值）
-      AI_span : Int := #S7_SPAN;   // 通道量程值（20mA对应数值）
+      zero_raw : Int := #S7_ZERO;   // 通道零点值（4mA对应数值）
+      span_raw : Int := #S7_SPAN;   // 通道量程值（20mA对应数值）
       overflow_SP : Int := 28000;   // 上溢出设置值
       underflow_SP : Int := -500;   // 下溢出设置值
       zero : Real;   // 零点值
       span : Real := 100.0;   // 量程值
       invalid_value : Real := -1000000.0;   // 无效输入时指定输出值
-      AH : Real := 80.0;   // 高高报设定值
-      WH : Real := 70.0;   // 高报设定值
-      WL : Real := 2.0;   // 低报设定值
-      AL : Real := 1.0;   // 低低报设定值
+      AH_limit : Real := 80.0;   // 高高报设定值
+      WH_limit : Real := 70.0;   // 高报设定值
+      WL_limit : Real := 2.0;   // 低报设定值
+      AL_limit : Real := 1.0;   // 低低报设定值
       dead_zone : Real := 0.5;   // 死区（赋值0.0时无死区）
       FT_time : Time := T#0MS;   // 容错时间 (单位毫秒 赋值T#0MS时无容错时间)
    END_VAR
@@ -32,18 +32,18 @@ VERSION : 0.1
    END_VAR
 
    VAR 
-      trigger_alarm_high { ExternalVisible := 'False'} : Bool;   // 触发高高报
-      trigger_warn_high { ExternalVisible := 'False'} : Bool;   // 触发高报
-      trigger_warn_low { ExternalVisible := 'False'} : Bool;   // 触发低报
-      trigger_alarm_low { ExternalVisible := 'False'} : Bool;   // 触发低低报
-      alarm_high_set {InstructionName := 'TON'; LibVersion := '1.0'; ExternalVisible := 'False'} : TON;
-      alarm_high_reset {InstructionName := 'TOF'; LibVersion := '1.0'; ExternalVisible := 'False'} : TOF;
-      warn_high_set {InstructionName := 'TON'; LibVersion := '1.0'; ExternalVisible := 'False'} : TON;
-      warn_high_reset {InstructionName := 'TOF'; LibVersion := '1.0'; ExternalVisible := 'False'} : TOF;
-      warn_low_set {InstructionName := 'TON'; LibVersion := '1.0'; ExternalVisible := 'False'} : TON;
-      warn_low_reset {InstructionName := 'TOF'; LibVersion := '1.0'; ExternalVisible := 'False'} : TOF;
-      alarm_low_set {InstructionName := 'TON'; LibVersion := '1.0'; ExternalVisible := 'False'} : TON;
-      alarm_low_reset {InstructionName := 'TOF'; LibVersion := '1.0'; ExternalVisible := 'False'} : TOF;
+      trigger_AH { ExternalVisible := 'False'} : Bool;   // 触发高高报
+      trigger_WH { ExternalVisible := 'False'} : Bool;   // 触发高报
+      trigger_WL { ExternalVisible := 'False'} : Bool;   // 触发低报
+      trigger_AL { ExternalVisible := 'False'} : Bool;   // 触发低低报
+      AH_flag_set {InstructionName := 'TON'; LibVersion := '1.0'; ExternalVisible := 'False'} : TON;
+      AH_flag_reset {InstructionName := 'TOF'; LibVersion := '1.0'; ExternalVisible := 'False'} : TOF;
+      WH_flag_set {InstructionName := 'TON'; LibVersion := '1.0'; ExternalVisible := 'False'} : TON;
+      WH_flag_reset {InstructionName := 'TOF'; LibVersion := '1.0'; ExternalVisible := 'False'} : TOF;
+      WL_flag_set {InstructionName := 'TON'; LibVersion := '1.0'; ExternalVisible := 'False'} : TON;
+      WL_flag_reset {InstructionName := 'TOF'; LibVersion := '1.0'; ExternalVisible := 'False'} : TOF;
+      AL_flag_set {InstructionName := 'TON'; LibVersion := '1.0'; ExternalVisible := 'False'} : TON;
+      AL_flag_reset {InstructionName := 'TOF'; LibVersion := '1.0'; ExternalVisible := 'False'} : TOF;
    END_VAR
 
    VAR_TEMP 
@@ -98,134 +98,134 @@ BEGIN
 	    #PV := // 无效时不计算，直接赋值为 -1000000.0
 	    #value := #invalid_value;
 	ELSE
-	    #PV := #value := (#AI - #AI_zero) * (#span - #zero) / (#AI_span - #AI_zero) + #zero;
+	    #PV := #value := (#AI - #zero_raw) * (#span - #zero) / (#span_raw - #zero_raw) + #zero;
 	END_IF;
 	
 	//参数设置错误
-	#SP_error := (#WH > #AH) OR (#WL > #WH) OR (#AL > #WL);
+	#SP_error := (#WH_limit > #AH_limit) OR (#WL_limit > #WH_limit) OR (#AL_limit > #WL_limit);
 	
 	//报警触发
 	IF #SP_error OR #invalid THEN
-	    #trigger_alarm_high := FALSE;
-	    #trigger_warn_high := FALSE;
-	    #trigger_warn_low := FALSE;
-	    #trigger_alarm_low := FALSE;
+	    #trigger_AH := FALSE;
+	    #trigger_WH := FALSE;
+	    #trigger_WL := FALSE;
+	    #trigger_AL := FALSE;
 	ELSE
 	    //上上限报警
-	    IF #value > #AH THEN
-	        #trigger_alarm_high := TRUE;
-	        #trigger_warn_high := FALSE;
-	        #trigger_alarm_low := FALSE;
-	        #trigger_warn_low := FALSE;
+	    IF #value > #AH_limit THEN
+	        #trigger_AH := TRUE;
+	        #trigger_WH := FALSE;
+	        #trigger_AL := FALSE;
+	        #trigger_WL := FALSE;
 	    END_IF;
 	    //上上限报警恢复
-	    IF #value < (#AH - #dead_zone) THEN
-	        #trigger_alarm_high := FALSE;
+	    IF #value < (#AH_limit - #dead_zone) THEN
+	        #trigger_AH := FALSE;
 	    END_IF;
 	    
 	    //上限报警
-	    IF NOT #trigger_alarm_high AND (#value > #WH) THEN
-	        #trigger_warn_high := TRUE;
-	        #trigger_alarm_low := FALSE;
-	        #trigger_warn_low := FALSE;
+	    IF NOT #trigger_AH AND (#value > #WH_limit) THEN
+	        #trigger_WH := TRUE;
+	        #trigger_AL := FALSE;
+	        #trigger_WL := FALSE;
 	    END_IF;
 	    //上限报警恢复
-	    IF #value < (#WH - #dead_zone) THEN
-	        #trigger_warn_high := FALSE;
+	    IF #value < (#WH_limit - #dead_zone) THEN
+	        #trigger_WH := FALSE;
 	    END_IF;
 	    
 	    //下下限报警
-	    IF (#value < #AL) THEN
-	        #trigger_alarm_low := TRUE;
-	        #trigger_warn_low := FALSE;
-	        #trigger_warn_high := FALSE;
-	        #trigger_alarm_high := FALSE;
+	    IF (#value < #AL_limit) THEN
+	        #trigger_AL := TRUE;
+	        #trigger_WL := FALSE;
+	        #trigger_WH := FALSE;
+	        #trigger_AH := FALSE;
 	    END_IF;
 	    //下下限报警恢复
-	    IF #value > (#AL + #dead_zone) THEN
-	        #trigger_alarm_low := FALSE;
+	    IF #value > (#AL_limit + #dead_zone) THEN
+	        #trigger_AL := FALSE;
 	    END_IF;
 	    
 	    //下限报警
-	    IF NOT #trigger_alarm_low AND (#value < #WL) THEN
-	        #trigger_warn_low := TRUE;
-	        #trigger_warn_high := FALSE;
-	        #trigger_alarm_high := FALSE;
+	    IF NOT #trigger_AL AND (#value < #WL_limit) THEN
+	        #trigger_WL := TRUE;
+	        #trigger_WH := FALSE;
+	        #trigger_AH := FALSE;
 	    END_IF;
 	    //下限报警恢复
-	    IF #value > (#WL + #dead_zone) THEN
-	        #trigger_warn_low := FALSE;
+	    IF #value > (#WL_limit + #dead_zone) THEN
+	        #trigger_WL := FALSE;
 	    END_IF;
 	END_IF;
 	
 	// 容错时限后输出报警标志
 	IF #FT_time = T#0ms THEN
-	    #AH_flag := #trigger_alarm_high;
-	    #WH_flag := #trigger_warn_high;
-	    #WL_flag := #trigger_warn_low;
-	    #AL_flag := #trigger_alarm_low;
+	    #AH_flag := #trigger_AH;
+	    #WH_flag := #trigger_WH;
+	    #WL_flag := #trigger_WL;
+	    #AL_flag := #trigger_AL;
 	ELSE
 	    // 延时置位高高报
-	    #alarm_high_set(
-	        IN := #trigger_alarm_high,
+	    #AH_flag_set(
+	        IN := #trigger_AH,
 	        PT := #FT_time);
-	    IF #alarm_high_set.Q THEN
+	    IF #AH_flag_set.Q THEN
 	        #AH_flag := TRUE;
 	    END_IF;
 	
 	    // 延时复位高高报
-	    #alarm_high_reset(
-	        IN := #trigger_alarm_high,
+	    #AH_flag_reset(
+	        IN := #trigger_AH,
 	        PT := #FT_time);
-	    IF NOT #alarm_high_reset.Q THEN
+	    IF NOT #AH_flag_reset.Q THEN
 	        #AH_flag := FALSE;
 	    END_IF;
 	    
 	    // 延时置位高报
-	    #warn_high_set(
-	        IN := #trigger_warn_high,
+	    #WH_flag_set(
+	        IN := #trigger_WH,
 	        PT := #FT_time);
-	    IF #warn_high_set.Q THEN
+	    IF #WH_flag_set.Q THEN
 	        #WH_flag := TRUE;
 	    END_IF;
 	
 	    // 延时复位高报
-	    #warn_high_reset(
-	        IN := #trigger_warn_high,
+	    #WH_flag_reset(
+	        IN := #trigger_WH,
 	        PT := #FT_time);
-	    IF NOT #warn_high_reset.Q THEN
+	    IF NOT #WH_flag_reset.Q THEN
 	        #WH_flag := FALSE;
 	    END_IF;
 	    
 	    // 延时置位低报
-	    #warn_low_set(
-	        IN := #trigger_warn_low,
+	    #WL_flag_set(
+	        IN := #trigger_WL,
 	        PT := #FT_time);
-	    IF #warn_low_set.Q THEN
+	    IF #WL_flag_set.Q THEN
 	        #WL_flag := TRUE;
 	    END_IF;
 	
 	    // 延时复位低报
-	    #warn_low_reset(
-	        IN := #trigger_warn_low,
+	    #WL_flag_reset(
+	        IN := #trigger_WL,
 	        PT := #FT_time);
-	    IF NOT #warn_low_reset.Q THEN
+	    IF NOT #WL_flag_reset.Q THEN
 	        #WL_flag := FALSE;
 	    END_IF;
 	
 	    // 延时置位低低报
-	    #alarm_low_set(
-	        IN := #trigger_alarm_low,
+	    #AL_flag_set(
+	        IN := #trigger_AL,
 	        PT := #FT_time);
-	    IF #alarm_low_set.Q THEN
+	    IF #AL_flag_set.Q THEN
 	        #AL_flag := TRUE;
 	    END_IF;
 	    
 	    // 延时复位低低报
-	    #alarm_low_reset(
-	        IN := #trigger_alarm_low,
+	    #AL_flag_reset(
+	        IN := #trigger_AL,
 	        PT := #FT_time);
-	    IF NOT #alarm_low_reset.Q THEN
+	    IF NOT #AL_flag_reset.Q THEN
 	        #AL_flag := FALSE;
 	    END_IF;
 	    
