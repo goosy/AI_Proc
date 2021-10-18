@@ -1,5 +1,7 @@
-
-// ******************************************
+//**************************************************************************************
+// Copyright Goosy. All Rights Reserved. Confidential
+// 由 Step7 AI_Proc 扩展属性而来
+//**************************************************************************************
 FUNCTION_BLOCK "AI_Proc"
 TITLE = '模拟量进行线性转换、限值报警'
 {
@@ -10,7 +12,7 @@ TITLE = '模拟量进行线性转换、限值报警'
 KNOW_HOW_PROTECT
 AUTHOR : Goosy
 NAME : AI_Proc
-VERSION :'0.01'
+VERSION :'0.02'
 FAMILY : GooLib
 // ************************************ 
 
@@ -18,7 +20,9 @@ CONST
     S7_ZERO := 0;
     S7_SPAN := 27648;
     S7_AI_MIN := -32768;
+    S7_AI_MIN_WORD := W#16#8000;
     S7_AI_MAX := 32767;
+    S7_AI_MAX_WORD := W#16#7FFF;
 END_CONST
 
 VAR_INPUT // Input Parameters
@@ -32,7 +36,7 @@ EV_ID {
 RUNUPCYC{
     S7_visible := 'false';
     S7_link := 'false'
-} :INT :=3; // Number of run up cycles
+} : INT := 3; // Number of run up cycles
 MSG_LOCK{
     S7_visible := 'false';
     S7_link := 'false';
@@ -43,16 +47,20 @@ AI{ // 模块采集值
     S7_shortcut := '通道值';
     S7_m_c := 'true';
     S7_dynamic := 'true'
-} : WORD := 0;
+} : WORD := S7_AI_MIN_WORD;
 value_raw AT AI : INT;
 
 zero_raw{ // 原始零点
+    S7_visible:='false';
+    S7_link:='false';
     S7_shortcut := '原始零点';
     S7_m_c := 'true';
     S7_dynamic := 'true'
     // S7_archive:= 'shortterm'
 } : INT := S7_ZERO;
 span_raw{ // 原始量程
+    S7_visible:='false';
+    S7_link:='false';
     S7_shortcut := '原始量程';
     S7_m_c := 'true';
     S7_dynamic := 'true'
@@ -60,11 +68,15 @@ span_raw{ // 原始量程
 } : INT := S7_SPAN;
 
 overflow_SP {
+    S7_visible:='false';
+    S7_link:='false';
     S7_shortcut := '上溢出值';
     S7_m_c := 'true';
     S7_dynamic := 'true'
 } : INT := 28000;
 underflow_SP {
+    S7_visible:='false';
+    S7_link:='false';
     S7_shortcut := '下溢出值';
     S7_m_c := 'true';
     S7_dynamic := 'true'
@@ -83,44 +95,52 @@ span{ // 量程
     // S7_archive:= 'shortterm'
 } : REAL := 100.0;
 invalid_value { // 无效输入时指定输出值
+    S7_visible:='false';
+    S7_link:='false';
     S7_shortcut := '无效指定值';
     S7_m_c := 'true'
-} :REAL := -1000000.0; 
+} : REAL := -1000000.0; 
 
 AH_limit{ // 上上限
+    S7_link:='false';
     S7_shortcut := '上上限';
     S7_m_c := 'true';
     S7_dynamic := 'true'
     // S7_archive:= 'shortterm'
 } : REAL :=100.0;
 WH_limit{ // 上限
+    S7_link:='false';
     S7_shortcut := '上限';
     S7_m_c := 'true';
     S7_dynamic := 'true'
     // S7_archive:= 'shortterm'
-} :REAL := 100.0;
+} : REAL := 100.0;
 WL_limit{ // 下限
+    S7_link:='false';
     S7_shortcut := '下限';
     S7_m_c := 'true';
     S7_dynamic := 'true'
     // S7_archive:= 'shortterm'
-} :REAL := 0.0;
+} : REAL := 0.0;
 AL_limit{ // 下下限
+    S7_link:='false';
     S7_shortcut := '下下限';
     S7_m_c := 'true';
     S7_dynamic := 'true'
     // S7_archive:= 'shortterm'
-} :REAL := 0.0;
+} : REAL := 0.0;
 dead_zone{ // 死区
+    S7_link:='false';
     S7_shortcut := '防抖死区';
     S7_m_c := 'true';
     S7_dynamic := 'true'
     // S7_archive:= 'shortterm'
-} :REAL := 2.0;
-FT_time {
-    S7_shortcut := '容错时间'; // 单位毫秒 赋值0时无容错时间
+} : REAL := 2.0;
+FT_time { // 容错时间，单位毫秒 赋值0时无容错时间
+    S7_link:='false';
+    S7_shortcut := '容错时间'; 
     S7_m_c := 'true'
-} :DINT := 0;
+} : DINT := 0;
 ftTime AT FT_time : TIME;
 
 END_VAR
