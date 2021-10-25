@@ -1,6 +1,6 @@
 ﻿FUNCTION_BLOCK "AI_Proc"
 { S7_Optimized_Access := 'FALSE' }
-VERSION : 0.3
+VERSION : 1.0
 KNOW_HOW_PROTECT
 AUTHOR:Goosy
 NAME:AI_Proc
@@ -16,6 +16,7 @@ VAR CONSTANT
 END_VAR
 
 VAR_INPUT 
+    enable_alarm : Bool; // 允许报警
     AI : Word; // 通道输入值
     PV_raw AT AI : Int; // 过程值原始值
     zero_raw : Int := #S7_ZERO; // 通道零点值（4mA对应数值）
@@ -114,7 +115,7 @@ BEGIN
     #SP_error := (#WH_limit > #AH_limit) OR (#WL_limit > #WH_limit) OR (#AL_limit > #WL_limit);
     
     //报警触发
-    IF #SP_error OR #invalid THEN
+    IF #SP_error OR #invalid OR #enable_alarm THEN
          #trigger_AH := FALSE;
          #trigger_WH := FALSE;
          #trigger_WL := FALSE;
@@ -240,6 +241,4 @@ BEGIN
          
     END_IF;
     
-         
 END_FUNCTION_BLOCK
-

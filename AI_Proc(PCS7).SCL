@@ -12,7 +12,7 @@ TITLE = '模拟量进行线性转换、限值报警'
 KNOW_HOW_PROTECT
 AUTHOR : Goosy
 NAME : AI_Proc
-VERSION :'0.02'
+VERSION :'1.0'
 FAMILY : GooLib
 // ************************************ 
 
@@ -43,6 +43,11 @@ MSG_LOCK{
     S7_m_c := 'true'
 } : BOOL := 0; // Enable 1 = Message locked
 
+enable_alarm{ // 允许报警
+    S7_shortcut := '允许报警';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+} : Bool; 
 AI{ // 模块采集值
     S7_shortcut := '通道值';
     S7_m_c := 'true';
@@ -380,7 +385,7 @@ ELSE
     SP_error := (WH_limit > AH_limit) OR (WL_limit > WH_limit) OR (AL_limit > WL_limit);
 
     // 报警触发
-    IF SP_error OR invalid THEN
+    IF SP_error OR invalid OR enable_alarm THEN
         trigger_AH := FALSE;
         trigger_WH := FALSE;
         trigger_WL := FALSE;

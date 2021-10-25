@@ -1,6 +1,6 @@
 FUNCTION_BLOCK "AI_Proc"
 TITLE='模拟量进行线性转换、限值报警'
-VERSION:'0.03'
+VERSION:'1.0'
 KNOW_HOW_PROTECT
 AUTHOR:Goosy
 NAME:AI_Proc
@@ -15,7 +15,8 @@ CONST
     S7_AI_MAX_WORD := W#16#7FFF;
 END_CONST
 
-VAR_INPUT 
+VAR_INPUT
+    enable_alarm : Bool; // 允许报警
     AI {S7_m_c := 'true'} : WORD ; // 模块采集值
     PV_raw AT AI : Int; // 过程值原始值
     zero_raw {S7_m_c := 'true'} : INT := S7_ZERO; // 模块零点值（4mA对应数值）0
@@ -115,7 +116,7 @@ END_IF;
 SP_error := (WH_limit > AH_limit) OR (WL_limit > WH_limit) OR (AL_limit > WL_limit);
 
 //报警触发
-IF SP_error OR invalid THEN
+IF SP_error OR invalid OR enable_alarm THEN
     trigger_AH := FALSE;
     trigger_WH := FALSE;
     trigger_WL := FALSE;
