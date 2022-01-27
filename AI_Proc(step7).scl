@@ -1,6 +1,6 @@
 FUNCTION_BLOCK "AI_Proc"
 TITLE='模拟量进行线性转换、限值报警'
-VERSION:'1.0'
+VERSION:'1.1'
 KNOW_HOW_PROTECT
 AUTHOR:Goosy
 NAME:AI_Proc
@@ -16,36 +16,36 @@ CONST
 END_CONST
 
 VAR_INPUT
-    enable_alarm : Bool; // 允许报警
-    AI {S7_m_c := 'true'} : WORD ; // 模块采集值
-    PV_raw AT AI : Int; // 过程值原始值
-    zero_raw {S7_m_c := 'true'} : INT := S7_ZERO; // 模块零点值（4mA对应数值）0
-    span_raw {S7_m_c := 'true'} : INT := S7_SPAN; // 模块量程值（20mA对应数值）27648
-    overflow_SP {S7_m_c := 'true'} : INT := 28000; // 上溢出值
-    underflow_SP {S7_m_c := 'true'} : INT := -500; // 下溢出值
-    zero {S7_m_c := 'true'} : REAL ; // 量程低值
-    span {S7_m_c := 'true'} : REAL := 100.0; // 量程高值
+    enable_alarm : Bool := TRUE;                     // 允许报警
+    AI {S7_m_c := 'true'} : WORD ;                   // 模块采集值
+    PV_raw AT AI : Int;                              // 过程值原始值
+    zero_raw {S7_m_c := 'true'} : INT := S7_ZERO;    // 模块零点值（4mA对应数值）0
+    span_raw {S7_m_c := 'true'} : INT := S7_SPAN;    // 模块量程值（20mA对应数值）27648
+    overflow_SP {S7_m_c := 'true'} : INT := 28000;   // 上溢出值
+    underflow_SP {S7_m_c := 'true'} : INT := -500;   // 下溢出值
+    zero {S7_m_c := 'true'} : REAL ;                 // 量程低值
+    span {S7_m_c := 'true'} : REAL := 100.0;         // 量程高值
     invalid_value {S7_m_c := 'true'} : REAL := -1000000.0; // 无效输入时指定输出值
-    AH_limit {S7_m_c := 'true'} : REAL := 100.0; // 高高报设定值
-    WH_limit {S7_m_c := 'true'} : REAL := 100.0; // 高报设定值
-    WL_limit {S7_m_c := 'true'} : REAL := 0.0; // 低报设定值
-    AL_limit {S7_m_c := 'true'} : REAL := 0.0; // 低低报设定值
-    dead_zone {S7_m_c := 'true'} : REAL := 0.5; // 死区 （赋值0.0时无死区）
-    FT_time {S7_m_c := 'true'} : DINT := 0; // 容错时间 (单位毫秒 赋值0时无容错时间)
+    AH_limit {S7_m_c := 'true'} : REAL := 100.0;     // 高高报设定值
+    WH_limit {S7_m_c := 'true'} : REAL := 100.0;     // 高报设定值
+    WL_limit {S7_m_c := 'true'} : REAL := 0.0;       // 低报设定值
+    AL_limit {S7_m_c := 'true'} : REAL := 0.0;       // 低低报设定值
+    dead_zone {S7_m_c := 'true'} : REAL := 0.5;      // 死区 （赋值0.0时无死区）
+    FT_time {S7_m_c := 'true'} : DINT := 0;          // 容错时间 (单位毫秒 赋值0时无容错时间)
     ftTime AT FT_time : TIME;
 END_VAR
 
 VAR_OUTPUT 
-    PV {S7_m_c := 'true'} : REAL ; // 采集量工程单位数值
-    AH_flag {S7_m_c := 'true'} : BOOL; // 高高报标志
-    WH_flag {S7_m_c := 'true'} : BOOL; // 高报标志
-    WL_flag {S7_m_c := 'true'} : BOOL; // 低报标志
-    AL_flag {S7_m_c := 'true'} : BOOL; // 低低报标志
-    invalid {S7_m_c := 'true'} : BOOL; // 数据无效，即 AI_error OR overflow OR underflow
-    AI_error {S7_m_c := 'true'} : BOOL; // 非测量输入，比如断线
-    overflow {S7_m_c := 'true'} : BOOL; // 高溢出
+    PV {S7_m_c := 'true'} : REAL ;       // 采集量工程单位数值
+    AH_flag {S7_m_c := 'true'} : BOOL;   // 高高报标志
+    WH_flag {S7_m_c := 'true'} : BOOL;   // 高报标志
+    WL_flag {S7_m_c := 'true'} : BOOL;   // 低报标志
+    AL_flag {S7_m_c := 'true'} : BOOL;   // 低低报标志
+    invalid {S7_m_c := 'true'} : BOOL;   // 数据无效，即 AI_error OR overflow OR underflow
+    AI_error {S7_m_c := 'true'} : BOOL;  // 非测量输入，比如断线
+    overflow {S7_m_c := 'true'} : BOOL;  // 高溢出
     underflow {S7_m_c := 'true'} : BOOL; // 低溢出
-    SP_error {S7_m_c := 'true'} : BOOL; // 设置错误
+    SP_error {S7_m_c := 'true'} : BOOL;  // 设置错误
 END_VAR
 
 VAR 
@@ -69,7 +69,6 @@ VAR_TEMP
     OVFL : BOOL ;
     UDFL : BOOL ;
 END_VAR
-
 
 BEGIN
 //判断输入值的有效性
@@ -101,10 +100,6 @@ overflow := OVFL;
 underflow := UDFL;
 invalid := ERR OR OVFL OR UDFL;
 IF invalid THEN
-    AH_flag := FALSE;
-    WH_flag := FALSE;
-    WL_flag := FALSE;
-    AL_flag := FALSE;
     PV := invalid_value;// 无效时不计算，直接赋值为 -1000000.0
     value := invalid_value;
 ELSE
@@ -116,7 +111,11 @@ END_IF;
 SP_error := (WH_limit > AH_limit) OR (WL_limit > WH_limit) OR (AL_limit > WL_limit);
 
 //报警触发
-IF SP_error OR invalid OR enable_alarm THEN
+IF SP_error OR invalid OR NOT enable_alarm THEN
+    AH_flag := FALSE;
+    WH_flag := FALSE;
+    WL_flag := FALSE;
+    AL_flag := FALSE;
     trigger_AH := FALSE;
     trigger_WH := FALSE;
     trigger_WL := FALSE;
@@ -126,8 +125,8 @@ ELSE
     IF value > AH_limit THEN
         trigger_AH := TRUE;
         trigger_WH := FALSE;
-        trigger_AL := FALSE;
         trigger_WL := FALSE;
+        trigger_AL := FALSE;
     END_IF;
     //上上限报警恢复
     IF value < (AH_limit - dead_zone) THEN
@@ -137,8 +136,8 @@ ELSE
     //上限报警
     IF NOT trigger_AH AND (value > WH_limit) THEN
         trigger_WH := TRUE;
-        trigger_AL := FALSE;
         trigger_WL := FALSE;
+        trigger_AL := FALSE;
     END_IF;
     //上限报警恢复
     IF value < (WH_limit - dead_zone) THEN
@@ -147,10 +146,10 @@ ELSE
     
     //下下限报警
     IF (value < AL_limit) THEN
-        trigger_AL := TRUE;
-        trigger_WL := FALSE;
-        trigger_WH := FALSE;
         trigger_AH := FALSE;
+        trigger_WH := FALSE;
+        trigger_WL := FALSE;
+        trigger_AL := TRUE;
     END_IF;
     //下下限报警恢复
     IF value > (AL_limit + dead_zone) THEN
@@ -159,9 +158,9 @@ ELSE
     
     //下限报警
     IF NOT trigger_AL AND (value < WL_limit) THEN
-        trigger_WL := TRUE;
-        trigger_WH := FALSE;
         trigger_AH := FALSE;
+        trigger_WH := FALSE;
+        trigger_WL := TRUE;
     END_IF;
     //下限报警恢复
     IF value > (WL_limit + dead_zone) THEN
@@ -170,7 +169,7 @@ ELSE
 END_IF;
 
 // 容错时限后输出报警标志
-IF ftTime = T#0ms THEN
+IF FT_time = 0 THEN
     AH_flag := trigger_AH;
     WH_flag := trigger_WH;
     WL_flag := trigger_WL;
@@ -239,7 +238,6 @@ ELSE
     IF NOT AL_flag_reset.Q THEN
         AL_flag := FALSE;
     END_IF;
-    
 END_IF;
 
 END_FUNCTION_BLOCK
