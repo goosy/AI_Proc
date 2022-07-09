@@ -16,7 +16,7 @@ CONST
 END_CONST
 
 VAR_INPUT
-    enable_alarm : Bool := TRUE;                     // 允许报警
+    enable_alarm {S7_m_c := 'true'} : Bool := TRUE;                     // 允许报警
     AI {S7_m_c := 'true'} : WORD ;                   // 模块采集值
     PV_raw AT AI : Int;                              // 过程值原始值
     zero_raw {S7_m_c := 'true'} : INT := S7_ZERO;    // 模块零点值（4mA对应数值）0
