@@ -1,6 +1,6 @@
 ﻿FUNCTION_BLOCK "AI_Proc"
 { S7_Optimized_Access := 'FALSE' }
-VERSION : 1.0
+VERSION : 1.2
 KNOW_HOW_PROTECT
 AUTHOR:Goosy
 NAME:AI_Proc
@@ -15,8 +15,11 @@ VAR CONSTANT
   S7_AI_MAX_WORD := W#16#7FFF;
 END_VAR
 
-VAR_INPUT 
-  enable_alarm : Bool := TRUE; // 允许报警
+VAR_INPUT
+  enable_AH : Bool := TRUE;    // 允许AH报警
+  enable_WH : Bool := TRUE;    // 允许WH报警
+  enable_WL : Bool := TRUE;    // 允许WL报警
+  enable_AL : Bool := TRUE;    // 允许AL报警
   AI : Word := S7_AI_MIN_WORD; // 通道输入原始值
   PV_raw AT AI : Int;
   zero_raw : Int := #S7_ZERO;  // 通道零点值（4mA对应数值）
@@ -36,16 +39,17 @@ VAR_INPUT
 END_VAR
 
 VAR_OUTPUT 
-  PV : Real; // 采集量工程单位数值
-  AH_flag : Bool; // 高高报标志
-  WH_flag : Bool; // 高报标志
-  WL_flag : Bool; // 低报标志
-  AL_flag : Bool; // 低低报标志
-  invalid : Bool; // 数据无效，即 AI_error OR high_overflow OR low_overflow
-  AI_error : Bool; // 非测量输入，比如断线
-  overflow : Bool; // 高溢出
+  PV : Real;        // 采集量工程单位数值
+  AH_flag : Bool;   // 高高报标志
+  WH_flag : Bool;   // 高报标志
+  WL_flag : Bool;   // 低报标志
+  AL_flag : Bool;   // 低低报标志
+  invalid : Bool;   // 数据无效，即 AI_error OR high_overflow OR low_overflow
+  AI_error : Bool;  // 非测量输入，比如断线
+  overflow : Bool;  // 高溢出
   underflow : Bool; // 低溢出
-  SP_error : Bool; // 错误
+  SP_error : Bool;  // 错误
+  no_alarm : Bool ; // 无报警
 END_VAR
 
 VAR 
@@ -97,6 +101,10 @@ END_VAR
 
 VAR_TEMP 
   value : Real;
+  tmp_AH : Real;
+  tmp_WH : Real;
+  tmp_WL : Real;
+  tmp_AL : Real;
   ERR : Bool;
   OVFL : Bool;
   UDFL : Bool;
@@ -138,11 +146,43 @@ ELSE
   #PV := #value := (#PV_raw - #zero_raw) * (#span - #zero) / (#span_raw - #zero_raw) + #zero;
 END_IF;
 
+//补全限制值
+#no_alarm := FALSE;
+IF #enable_AH THEN
+  #tmp_AH := #AH_limit;
+ELSIF #enable_WH THEN
+  #tmp_AH := #WH_limit;
+ELSIF #enable_WL THEN
+  #tmp_AH := #WL_limit;
+ELSIF #enable_AL THEN
+  #tmp_AH := #AL_limit;
+ELSE
+  #no_alarm := TRUE;
+END_IF;
+
+IF #enable_WH THEN
+  #tmp_WH := #WH_limit;
+ELSE
+  #tmp_WH := #tmp_AH;
+END_IF;
+
+IF #enable_WL THEN
+  #tmp_WL := #WL_limit;
+ELSE
+  #tmp_WL := #tmp_WH;
+END_IF;
+
+IF #enable_AL THEN
+  #tmp_AL := #AL_limit;
+ELSE
+  #tmp_AL := #tmp_WL;
+END_IF;
+
 //参数设置错误
-#SP_error := (#WH_limit > #AH_limit) OR (#WL_limit > #WH_limit) OR (#AL_limit > #WL_limit);
+#SP_error := #tmp_WH > #tmp_AH OR #tmp_WL > #tmp_WH OR #tmp_AL > #tmp_WL;
 
 //报警触发
-IF #SP_error OR #invalid OR NOT #enable_alarm THEN
+IF #SP_error OR #invalid THEN
   #AH_flag := 
   #WH_flag := 
   #WL_flag := 
@@ -153,54 +193,54 @@ IF #SP_error OR #invalid OR NOT #enable_alarm THEN
   #trigger_AL := FALSE;
 ELSE
   //上上限报警
-  IF #value > #AH_limit THEN
+  IF #enable_AH AND (#value > #AH_limit) THEN
     #trigger_AH := TRUE;
     #trigger_WH := FALSE;
     #trigger_WL := FALSE;
     #trigger_AL := FALSE;
   END_IF;
   //上上限报警恢复
-  IF #value < (#AH_limit - #dead_zone) THEN
+  IF NOT #enable_AH OR #value < (#AH_limit - #dead_zone) THEN
     #trigger_AH := FALSE;
   END_IF;
   
   //上限报警
-  IF NOT #trigger_AH AND (#value > #WH_limit) THEN
+  IF NOT #trigger_AH AND #enable_WH AND (#value > #WH_limit) THEN
     #trigger_WH := TRUE;
     #trigger_WL := FALSE;
     #trigger_AL := FALSE;
   END_IF;
   //上限报警恢复
-  IF #value < (#WH_limit - #dead_zone) THEN
+  IF NOT #enable_WH OR #value < (#WH_limit - #dead_zone) THEN
     #trigger_WH := FALSE;
   END_IF;
     
   //下下限报警
-  IF (#value < #AL_limit) THEN
-  #trigger_AH := FALSE;
-  #trigger_WH := FALSE;
-  #trigger_WL := FALSE;
-  #trigger_AL := TRUE;
+  IF #enable_AL AND (#value < #AL_limit) THEN
+    #trigger_AH := FALSE;
+    #trigger_WH := FALSE;
+    #trigger_WL := FALSE;
+    #trigger_AL := TRUE;
   END_IF;
   //下下限报警恢复
-  IF #value > (#AL_limit + #dead_zone) THEN
+  IF NOT #enable_AL OR #value > (#AL_limit + #dead_zone) THEN
     #trigger_AL := FALSE;
   END_IF;
   
   //下限报警
-  IF NOT #trigger_AL AND (#value < #WL_limit) THEN
-  #trigger_WH := FALSE;
-  #trigger_AH := FALSE;
-  #trigger_WL := TRUE;
+  IF NOT #trigger_AL AND #enable_WL AND (#value < #WL_limit) THEN
+    #trigger_AH := FALSE;
+    #trigger_WH := FALSE;
+    #trigger_WL := TRUE;
   END_IF;
   //下限报警恢复
-  IF #value > (#WL_limit + #dead_zone) THEN
+  IF NOT #enable_WL OR #value > (#WL_limit + #dead_zone) THEN
     #trigger_WL := FALSE;
   END_IF;
 END_IF;
 
 // 容错时限后输出报警标志
-IF #ftTime = T#0ms THEN
+IF #FT_time = 0 THEN
   #AH_flag := #trigger_AH;
   #WH_flag := #trigger_WH;
   #WL_flag := #trigger_WL;

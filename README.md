@@ -2,8 +2,9 @@
 
 ## 说明
 
-- 用于博途的SCL源码：AI_Proc(Portal).scl
+- 用于博途的SCL源码：AI_Proc(portal).scl
 - 用于Step7的SCL源码：AI_Proc(step7).scl
+- 用于PCS7的SCL源码：AI_Proc(pcs7).scl
 
 ## 调用示例
 

@@ -12,7 +12,7 @@ TITLE = '模拟量进行线性转换、限值报警'
 KNOW_HOW_PROTECT
 AUTHOR : Goosy
 NAME : AI_Proc
-VERSION :'1.0'
+VERSION :'1.2'
 FAMILY : GooLib
 // ************************************ 
 
@@ -43,11 +43,26 @@ MSG_LOCK{
   S7_m_c := 'true'
 } : BOOL := 0; // Enable 1 = Message locked
 
-enable_alarm{ // 允许报警
-  S7_shortcut := '允许报警';
+enable_AH { // 允许AH报警
+  S7_shortcut := '允许AH报警';
   S7_m_c := 'true';
   S7_dynamic := 'true'
-} : Bool; 
+} : BOOL := 1;     
+enable_WH { // 允许WH报警
+  S7_shortcut := '允许WH报警';
+  S7_m_c := 'true';
+  S7_dynamic := 'true'
+} : BOOL := 1;     
+enable_WL { // 允许WL报警
+  S7_shortcut := '允许WL报警';
+  S7_m_c := 'true';
+  S7_dynamic := 'true'
+} : BOOL := 1;     
+enable_AL { // 允许AL报警
+  S7_shortcut := '允许AL报警';
+  S7_m_c := 'true';
+  S7_dynamic := 'true'
+} : BOOL := 1;     
 AI{ // 模块采集值
   S7_shortcut := '通道值';
   S7_m_c := 'true';
@@ -226,6 +241,12 @@ SP_error{
   S7_dynamic := 'true'
 } :BOOL := 0;
 
+no_alarm{
+  S7_shortcut := '无报警';
+  S7_m_c := 'true';
+  S7_dynamic := 'true'
+} :BOOL := 0;
+
 END_VAR
 
 
@@ -309,6 +330,10 @@ END_STRUCT;
 DUMMY : INT;
 
 tmp_value : REAL;
+tmp_AH : REAL;
+tmp_WH : REAL;
+tmp_WL : REAL;
+tmp_AL : REAL;
 ERR : BOOL;
 OVFL : BOOL;
 UDFL : BOOL;
@@ -381,59 +406,91 @@ ELSE
     PV := tmp_value;
   END_IF;
 
+  //补全限制值
+  no_alarm := FALSE;
+  IF enable_AH THEN
+    tmp_AH := AH_limit;
+  ELSIF enable_WH THEN
+    tmp_AH := WH_limit;
+  ELSIF enable_WL THEN
+    tmp_AH := WL_limit;
+  ELSIF enable_AL THEN
+    tmp_AH := AL_limit;
+  ELSE
+    no_alarm := TRUE;
+  END_IF;
+
+  IF enable_WH THEN
+    tmp_WH := WH_limit;
+  ELSE
+    tmp_WH := tmp_AH;
+  END_IF;
+
+  IF enable_WL THEN
+    tmp_WL := WL_limit;
+  ELSE
+    tmp_WL := tmp_WH;
+  END_IF;
+
+  IF enable_AL THEN
+    tmp_AL := AL_limit;
+  ELSE
+    tmp_AL := tmp_WL;
+  END_IF;
+
   // 参数设置错误
-  SP_error := (WH_limit > AH_limit) OR (WL_limit > WH_limit) OR (AL_limit > WL_limit);
+  SP_error := tmp_WH > tmp_AH OR tmp_WL > tmp_WH OR tmp_AL > tmp_WL;
 
   // 报警触发
-  IF SP_error OR invalid OR enable_alarm THEN
+  IF SP_error OR invalid THEN
     trigger_AH := FALSE;
     trigger_WH := FALSE;
     trigger_WL := FALSE;
     trigger_AL := FALSE;
   ELSE
     // 上上限报警
-    IF tmp_value > AH_limit THEN
+    IF enable_AH AND (tmp_value > AH_limit) THEN
       trigger_AH := TRUE;
       trigger_WH := FALSE;
       trigger_AL := FALSE;
       trigger_WL := FALSE;
     END_IF;
     // 上上限报警恢复
-    IF tmp_value < (AH_limit - dead_zone) THEN
+    IF NOT enable_AH OR tmp_value < (AH_limit - dead_zone) THEN
       trigger_AH := FALSE;
     END_IF;
     
     // 上限报警
-    IF NOT trigger_AH AND (tmp_value > WH_limit) THEN
+    IF NOT trigger_AH AND enable_WH AND (tmp_value > WH_limit) THEN
       trigger_WH := TRUE;
       trigger_AL := FALSE;
       trigger_WL := FALSE;
     END_IF;
     // 上限报警恢复
-    IF tmp_value < (WH_limit - dead_zone) THEN
+    IF NOT enable_WH OR tmp_value < (WH_limit - dead_zone) THEN
       trigger_WH := FALSE;
     END_IF;
     
     // 下下限报警
-    IF (tmp_value < AL_limit) THEN
+    IF enable_AL AND (tmp_value < AL_limit) THEN
       trigger_AL := TRUE;
       trigger_WL := FALSE;
       trigger_WH := FALSE;
       trigger_AH := FALSE;
     END_IF;
     // 下下限报警恢复
-    IF tmp_value > (AL_limit + dead_zone) THEN
+    IF NOT enable_AL OR tmp_value > (AL_limit + dead_zone) THEN
       trigger_AL := FALSE;
     END_IF;
     
     // 下限报警
-    IF NOT trigger_AL AND (tmp_value < WL_limit) THEN
+    IF NOT trigger_AL AND enable_WL AND (tmp_value < WL_limit) THEN
       trigger_WL := TRUE;
       trigger_WH := FALSE;
       trigger_AH := FALSE;
     END_IF;
     // 下限报警恢复
-    IF tmp_value > (WL_limit + dead_zone) THEN
+    IF NOT enable_WL OR tmp_value > (WL_limit + dead_zone) THEN
       trigger_WL := FALSE;
     END_IF;
   END_IF;
