@@ -5,161 +5,161 @@
 FUNCTION_BLOCK "AI_Proc"
 TITLE = '模拟量进行线性转换、限值报警'
 {
-  S7_tasklist := 'OB100'; // Block is called if there is in a warm restart
-  S7_m_c := 'true';
-  S7_alarm_ui := '1'
+    S7_tasklist := 'OB100'; // Block is called if there is in a warm restart
+    S7_m_c := 'true';
+    S7_alarm_ui := '1'
 }
 KNOW_HOW_PROTECT
 AUTHOR : Goosy
 NAME : AI_Proc
-VERSION :'1.2'
+VERSION :'1.3'
 FAMILY : GooLib
 // ************************************ 
 
 CONST
-  S7_ZERO := 0;
-  S7_SPAN := 27648;
-  S7_AI_MIN := -32768;
-  S7_AI_MIN_WORD := W#16#8000;
-  S7_AI_MAX := 32767;
-  S7_AI_MAX_WORD := W#16#7FFF;
+    S7_ZERO := 0;
+    S7_SPAN := 27648;
+    S7_AI_MIN := -32768;
+    S7_AI_MIN_WORD := W#16#8000;
+    S7_AI_MAX := 32767;
+    S7_AI_MAX_WORD := W#16#7FFF;
 END_CONST
 
 VAR_INPUT // Input Parameters
 EV_ID {
-  S7_visible := 'false';
-  S7_link := 'false';
-  S7_param := 'false';
-  S7_server := 'alarm_archiv';
-  S7_a_type := 'alarm_8p'
+    S7_visible := 'false';
+    S7_link := 'false';
+    S7_param := 'false';
+    S7_server := 'alarm_archiv';
+    S7_a_type := 'alarm_8p'
 } : DWORD := 0; // Message ID
 RUNUPCYC{
-  S7_visible := 'false';
-  S7_link := 'false'
+    S7_visible := 'false';
+    S7_link := 'false'
 } : INT := 3; // Number of run up cycles
 MSG_LOCK{
-  S7_visible := 'false';
-  S7_link := 'false';
-  S7_m_c := 'true'
+    S7_visible := 'false';
+    S7_link := 'false';
+    S7_m_c := 'true'
 } : BOOL := 0; // Enable 1 = Message locked
 
 enable_AH { // 允许AH报警
-  S7_shortcut := '允许AH报警';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '允许AH报警';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } : BOOL := 1;     
 enable_WH { // 允许WH报警
-  S7_shortcut := '允许WH报警';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '允许WH报警';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } : BOOL := 1;     
 enable_WL { // 允许WL报警
-  S7_shortcut := '允许WL报警';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '允许WL报警';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } : BOOL := 1;     
 enable_AL { // 允许AL报警
-  S7_shortcut := '允许AL报警';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '允许AL报警';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } : BOOL := 1;     
 AI{ // 模块采集值
-  S7_shortcut := '通道值';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '通道值';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } : WORD := S7_AI_MIN_WORD;
 value_raw AT AI : INT;
 
 zero_raw{ // 原始零点
-  S7_visible:='false';
-  S7_link:='false';
-  S7_shortcut := '原始零点';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
-  // S7_archive:= 'shortterm'
+    S7_visible:='false';
+    S7_link:='false';
+    S7_shortcut := '原始零点';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+    // S7_archive:= 'shortterm'
 } : INT := S7_ZERO;
 span_raw{ // 原始量程
-  S7_visible:='false';
-  S7_link:='false';
-  S7_shortcut := '原始量程';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
-  // S7_archive:= 'shortterm'
+    S7_visible:='false';
+    S7_link:='false';
+    S7_shortcut := '原始量程';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+    // S7_archive:= 'shortterm'
 } : INT := S7_SPAN;
 
 overflow_SP {
-  S7_visible:='false';
-  S7_link:='false';
-  S7_shortcut := '上溢出值';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_visible:='false';
+    S7_link:='false';
+    S7_shortcut := '上溢出值';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } : INT := 28000;
 underflow_SP {
-  S7_visible:='false';
-  S7_link:='false';
-  S7_shortcut := '下溢出值';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_visible:='false';
+    S7_link:='false';
+    S7_shortcut := '下溢出值';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } : INT := -500;
 
 zero{ // 零点
-  S7_shortcut := '零点';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
-  // S7_archive:= 'shortterm'
+    S7_shortcut := '零点';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+    // S7_archive:= 'shortterm'
 } : REAL := 0.0;
 span{ // 量程
-  S7_shortcut := '量程';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
-  // S7_archive:= 'shortterm'
+    S7_shortcut := '量程';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+    // S7_archive:= 'shortterm'
 } : REAL := 100.0;
 invalid_value { // 无效输入时指定输出值
-  S7_visible:='false';
-  S7_link:='false';
-  S7_shortcut := '无效指定值';
-  S7_m_c := 'true'
+    S7_visible:='false';
+    S7_link:='false';
+    S7_shortcut := '无效指定值';
+    S7_m_c := 'true'
 } : REAL := -1000000.0; 
 
 AH_limit{ // 上上限
-  S7_link:='false';
-  S7_shortcut := '上上限';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
-  // S7_archive:= 'shortterm'
+    S7_link:='false';
+    S7_shortcut := '上上限';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+    // S7_archive:= 'shortterm'
 } : REAL :=100.0;
 WH_limit{ // 上限
-  S7_link:='false';
-  S7_shortcut := '上限';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
-  // S7_archive:= 'shortterm'
+    S7_link:='false';
+    S7_shortcut := '上限';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+    // S7_archive:= 'shortterm'
 } : REAL := 100.0;
 WL_limit{ // 下限
-  S7_link:='false';
-  S7_shortcut := '下限';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
-  // S7_archive:= 'shortterm'
+    S7_link:='false';
+    S7_shortcut := '下限';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+    // S7_archive:= 'shortterm'
 } : REAL := 0.0;
 AL_limit{ // 下下限
-  S7_link:='false';
-  S7_shortcut := '下下限';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
-  // S7_archive:= 'shortterm'
+    S7_link:='false';
+    S7_shortcut := '下下限';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+    // S7_archive:= 'shortterm'
 } : REAL := 0.0;
 dead_zone{ // 死区
-  S7_link:='false';
-  S7_shortcut := '防抖死区';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
-  // S7_archive:= 'shortterm'
+    S7_link:='false';
+    S7_shortcut := '防抖死区';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+    // S7_archive:= 'shortterm'
 } : REAL := 2.0;
 FT_time { // 容错时间，单位毫秒 赋值0时无容错时间
-  S7_link:='false';
-  S7_shortcut := '容错时间';
-  S7_m_c := 'true'
+    S7_link:='false';
+    S7_shortcut := '容错时间';
+    S7_m_c := 'true'
 } : DINT := 0;
 ftTime AT FT_time : TIME;
 
@@ -169,83 +169,107 @@ END_VAR
 VAR_OUTPUT
 
 QMSG_ERR{
-  S7_visible := 'false';
-  S7_dynamic := 'true'
+    S7_visible := 'false';
+    S7_dynamic := 'true'
 } :BOOL := 0; // ALARM_8P :Error output
 QMSG_SUP{
-  S7_visible := 'false';
-  S7_dynamic := 'true';
-  S7_m_c := 'true'
+    S7_visible := 'false';
+    S7_dynamic := 'true';
+    S7_m_c := 'true'
 } :BOOL := 0; // 1 =Message Suppression Active
 MSG_STAT{
-  S7_visible := 'false';
-  S7_dynamic := 'true'
+    S7_visible := 'false';
+    S7_dynamic := 'true'
 } :WORD := 0; // 1 =Message STATUS Active
 MSG_ACK{
-  S7_visible := 'false';
-  S7_dynamic := 'true'
+    S7_visible := 'false';
+    S7_dynamic := 'true'
 } :WORD := 0; // 1 =Message ACK_STATE Active
 
 PV{ // 过程值
-  S7_shortcut := '过程值';
-  S7_m_c := 'true';
-  S7_dynamic := 'true';
-  S7_archive := 'shortterm'
+    S7_shortcut := '过程值';
+    S7_m_c := 'true';
+    S7_dynamic := 'true';
+    S7_archive := 'shortterm'
 } :REAL := 0.0;
 
 invalid {
-  S7_shortcut := '数据无效'; // 即 AI_error OR overflow OR underflow
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '数据无效'; // 即 AI_error OR overflow OR underflow
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } :BOOL := 0; 
 AI_error{ // 错误标志
-  S7_shortcut := '错误标志';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '错误标志';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } :BOOL := 0;
 overflow{ // 上溢出标志
-  S7_shortcut := '上溢出标志';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '上溢出标志';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } :BOOL := 0;
 underflow{ // 下溢出标志
-  S7_shortcut := '下溢出标志';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '下溢出标志';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } :BOOL := 0;
 
 AH_flag{ // 上上限报警
-  S7_shortcut := '上上限报警';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '上上限报警';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } :BOOL := 0;
 WH_flag{ // 上限警告
-  S7_shortcut := '上限警告';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '上限警告';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } :BOOL := 0;
 WL_flag{ // 下限警告
-  S7_shortcut := '下限警告';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '下限警告';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } :BOOL := 0;
 AL_flag{ // 下下限报警
-  S7_shortcut := '下下限报警';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '下下限报警';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } :BOOL := 0;
 
 SP_error{
-  S7_shortcut := '设置错误';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '设置错误';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } :BOOL := 0;
 
 no_alarm{
-  S7_shortcut := '无报警';
-  S7_m_c := 'true';
-  S7_dynamic := 'true'
+    S7_shortcut := '无报警';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
 } :BOOL := 0;
+
+AH_PV{ // AH报警时的最后过程值
+    S7_shortcut := 'AH报警实时值';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+} :REAL := 0.0;
+
+WH_PV{ // WH报警时的最后过程值
+    S7_shortcut := 'WH报警实时值';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+} :REAL := 0.0;
+
+WL_PV{ // WL报警时的最后过程值
+    S7_shortcut := 'WL报警实时值';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+} :REAL := 0.0;
+
+AL_PV{ // AL报警时的最后过程值
+    S7_shortcut := 'AL报警实时值';
+    S7_m_c := 'true';
+    S7_dynamic := 'true'
+} :REAL := 0.0;
 
 END_VAR
 
@@ -308,24 +332,24 @@ pbALARM4 : BOOL;
 pbM_SUP : BOOL;
 pb_SIG_1, pb_SIG_2, pb_SIG_3, pb_SIG_4, pb_SIG_5, pb_SIG_6, pb_SIG_7, pb_SIG_8 : BOOL;
 TOP_SI : STRUCT
-  EV_CLASS : BYTE;
-  EV_NUM : BYTE;
-  PRIORITY : BYTE;
-  NUM : BYTE;
-  TYP2_3 : BYTE;
-  TYP1 : BYTE;
-  ZI1 : WORD;
-  ZI2_3 : DWORD;
+    EV_CLASS : BYTE;
+    EV_NUM : BYTE;
+    PRIORITY : BYTE;
+    NUM : BYTE;
+    TYP2_3 : BYTE;
+    TYP1 : BYTE;
+    ZI1 : WORD;
+    ZI2_3 : DWORD;
 END_STRUCT;
 START_UP_SI : STRUCT
-  EV_CLASS : BYTE;
-  EV_NUM : BYTE;
-  PRIORITY : BYTE;
-  NUM : BYTE;
-  TYP2_3 : BYTE;
-  TYP1 : BYTE;
-  ZI1 : WORD;
-  ZI2_3 : DWORD;
+    EV_CLASS : BYTE;
+    EV_NUM : BYTE;
+    PRIORITY : BYTE;
+    NUM : BYTE;
+    TYP2_3 : BYTE;
+    TYP1 : BYTE;
+    ZI1 : WORD;
+    ZI2_3 : DWORD;
 END_STRUCT;
 DUMMY : INT;
 
@@ -344,312 +368,320 @@ END_VAR
 DUMMY := RD_SINFO(TOP_SI := TOP_SI, START_UP_SI := START_UP_SI);
 pbM_SUP := MSG_LOCK;
 IF sbRESTART THEN
-  TOP_SI.NUM := 100;
-  sbRESTART := FALSE;
+    TOP_SI.NUM := 100;
+    sbRESTART := FALSE;
 END_IF;
 
 CASE BYTE_TO_INT(TOP_SI.NUM) OF 
-  100 :
-  PV := 0.0;SP_error := 0;overflow := 0;underflow := 0;invalid := 0;
-  AH_flag := 0;WH_flag := 0;WL_flag := 0;AL_flag := 0;
-  QMSG_ERR := 0;
-  QMSG_SUP := 0;
-  MSG_STAT := 0;
-  MSG_ACK := 0;
-  pb_SIG_1 := 0;
-  pb_SIG_2 := 0;
-  pb_SIG_3 := 0;
-  pb_SIG_4 := 0;
-  pb_SIG_5 := 0;
-  pb_SIG_6 := 0;
-  pb_SIG_7 := 0;
-  pb_SIG_8 := 0;
-  siRUNUPCNT := RUNUPCYC;
+    100 :
+    PV := 0.0;SP_error := 0;overflow := 0;underflow := 0;invalid := 0;
+    AH_flag := 0;WH_flag := 0;WL_flag := 0;AL_flag := 0;
+    QMSG_ERR := 0;
+    QMSG_SUP := 0;
+    MSG_STAT := 0;
+    MSG_ACK := 0;
+    pb_SIG_1 := 0;
+    pb_SIG_2 := 0;
+    pb_SIG_3 := 0;
+    pb_SIG_4 := 0;
+    pb_SIG_5 := 0;
+    pb_SIG_6 := 0;
+    pb_SIG_7 := 0;
+    pb_SIG_8 := 0;
+    siRUNUPCNT := RUNUPCYC;
 ELSE
-  // 判断输入值的有效性
-  IF value_raw = S7_AI_MIN OR value_raw = S7_AI_MAX THEN
-    // 非测量输入
-    ERR := TRUE; // 输出
-    OVFL := FALSE;
-    UDFL := FALSE;
-  ELSIF value_raw > overflow_SP THEN
-    // 高溢出
-    ERR := FALSE; 
-    OVFL := TRUE; // 输出
-    UDFL := FALSE;
-  ELSIF value_raw < underflow_SP THEN
-    // 低溢出
-    ERR := FALSE; 
-    UDFL := TRUE; // 输出
-    OVFL := FALSE;
-  ELSE
-    // 正常输入
-    ERR := FALSE;
-    OVFL := FALSE;
-    UDFL := FALSE;
-  END_IF;
-
-  // 设置输出值
-  AI_error := ERR;
-  overflow := OVFL;
-  underflow := UDFL;
-  invalid := ERR OR OVFL OR UDFL;
-  IF invalid THEN
-    AH_flag := FALSE;
-    WH_flag := FALSE;
-    WL_flag := FALSE;
-    AL_flag := FALSE;
-    PV := invalid_value; // 无效时不计算，直接赋值为 -1000000.0
-    tmp_value := invalid_value;
-  ELSE
-    tmp_value := (value_raw - zero_raw) * (span - zero) / (span_raw - zero_raw) + zero;
-    PV := tmp_value;
-  END_IF;
-
-  //补全限制值
-  no_alarm := FALSE;
-  IF enable_AH THEN
-    tmp_AH := AH_limit;
-  ELSIF enable_WH THEN
-    tmp_AH := WH_limit;
-  ELSIF enable_WL THEN
-    tmp_AH := WL_limit;
-  ELSIF enable_AL THEN
-    tmp_AH := AL_limit;
-  ELSE
-    no_alarm := TRUE;
-  END_IF;
-
-  IF enable_WH THEN
-    tmp_WH := WH_limit;
-  ELSE
-    tmp_WH := tmp_AH;
-  END_IF;
-
-  IF enable_WL THEN
-    tmp_WL := WL_limit;
-  ELSE
-    tmp_WL := tmp_WH;
-  END_IF;
-
-  IF enable_AL THEN
-    tmp_AL := AL_limit;
-  ELSE
-    tmp_AL := tmp_WL;
-  END_IF;
-
-  // 参数设置错误
-  SP_error := tmp_WH > tmp_AH OR tmp_WL > tmp_WH OR tmp_AL > tmp_WL;
-
-  // 报警触发
-  IF SP_error OR invalid THEN
-    trigger_AH := FALSE;
-    trigger_WH := FALSE;
-    trigger_WL := FALSE;
-    trigger_AL := FALSE;
-  ELSE
-    // 上上限报警
-    IF enable_AH AND (tmp_value > AH_limit) THEN
-      trigger_AH := TRUE;
-      trigger_WH := FALSE;
-      trigger_AL := FALSE;
-      trigger_WL := FALSE;
-    END_IF;
-    // 上上限报警恢复
-    IF NOT enable_AH OR tmp_value < (AH_limit - dead_zone) THEN
-      trigger_AH := FALSE;
-    END_IF;
-    
-    // 上限报警
-    IF NOT trigger_AH AND enable_WH AND (tmp_value > WH_limit) THEN
-      trigger_WH := TRUE;
-      trigger_AL := FALSE;
-      trigger_WL := FALSE;
-    END_IF;
-    // 上限报警恢复
-    IF NOT enable_WH OR tmp_value < (WH_limit - dead_zone) THEN
-      trigger_WH := FALSE;
-    END_IF;
-    
-    // 下下限报警
-    IF enable_AL AND (tmp_value < AL_limit) THEN
-      trigger_AL := TRUE;
-      trigger_WL := FALSE;
-      trigger_WH := FALSE;
-      trigger_AH := FALSE;
-    END_IF;
-    // 下下限报警恢复
-    IF NOT enable_AL OR tmp_value > (AL_limit + dead_zone) THEN
-      trigger_AL := FALSE;
-    END_IF;
-    
-    // 下限报警
-    IF NOT trigger_AL AND enable_WL AND (tmp_value < WL_limit) THEN
-      trigger_WL := TRUE;
-      trigger_WH := FALSE;
-      trigger_AH := FALSE;
-    END_IF;
-    // 下限报警恢复
-    IF NOT enable_WL OR tmp_value > (WL_limit + dead_zone) THEN
-      trigger_WL := FALSE;
-    END_IF;
-  END_IF;
-
-  // 容错时限后输出报警标志
-  IF FT_time = 0 THEN
-    AH_flag := trigger_AH;
-    WH_flag := trigger_WH;
-    WL_flag := trigger_WL;
-    AL_flag := trigger_AL;
-  ELSE
-    // 延时置位高高报
-    AH_flag_set(
-      IN := trigger_AH,
-      PT := ftTime);
-    IF AH_flag_set.Q THEN
-      AH_flag := TRUE;
-    END_IF;
-
-    // 延时复位高高报
-    AH_flag_reset(
-      IN := trigger_AH,
-      PT := ftTime);
-    IF NOT AH_flag_reset.Q THEN
-      AH_flag := FALSE;
-    END_IF;
-    
-    // 延时置位高报
-    WH_flag_set(
-      IN := trigger_WH,
-      PT := ftTime);
-    IF WH_flag_set.Q THEN
-      WH_flag := TRUE;
-    END_IF;
-
-    // 延时复位高报
-    WH_flag_reset(
-      IN := trigger_WH,
-      PT := ftTime);
-    IF NOT WH_flag_reset.Q THEN
-      WH_flag := FALSE;
-    END_IF;
-    
-    // 延时置位低报
-    WL_flag_set(
-      IN := trigger_WL,
-      PT := ftTime);
-    IF WL_flag_set.Q THEN
-      WL_flag := TRUE;
-    END_IF;
-
-    // 延时复位低报
-    WL_flag_reset(
-      IN := trigger_WL,
-      PT := ftTime);
-    IF NOT WL_flag_reset.Q THEN
-      WL_flag := FALSE;
-    END_IF;
-
-    // 延时置位低低报
-    AL_flag_set(
-      IN := trigger_AL,
-      PT := ftTime);
-    IF AL_flag_set.Q THEN
-      AL_flag := TRUE;
-    END_IF;
-    
-    // 延时复位低低报
-    AL_flag_reset(
-      IN := trigger_AL,
-      PT := ftTime);
-    IF NOT AL_flag_reset.Q THEN
-      AL_flag := FALSE;
-    END_IF;
-    
-  END_IF;
-
-  IF siRUNUPCNT = 0 THEN
-    IF MSG_LOCK THEN
-      pb_SIG_1 := 0;
-      pb_SIG_2 := 0;
-      pb_SIG_3 := 0;
-      pb_SIG_4 := 0;
+    // 判断输入值的有效性
+    IF value_raw = S7_AI_MIN OR value_raw = S7_AI_MAX THEN
+        // 非测量输入
+        ERR := TRUE; // 输出
+        OVFL := FALSE;
+        UDFL := FALSE;
+    ELSIF value_raw > overflow_SP THEN
+        // 高溢出
+        ERR := FALSE; 
+        OVFL := TRUE; // 输出
+        UDFL := FALSE;
+    ELSIF value_raw < underflow_SP THEN
+        // 低溢出
+        ERR := FALSE; 
+        UDFL := TRUE; // 输出
+        OVFL := FALSE;
     ELSE
-      pb_SIG_1 := AH_flag;
-      pb_SIG_2 := WH_flag;
-      pb_SIG_3 := WL_flag;
-      pb_SIG_4 := AL_flag;
+        // 正常输入
+        ERR := FALSE;
+        OVFL := FALSE;
+        UDFL := FALSE;
     END_IF;
-    pbALARM1 := sb_SIG_1 <> pb_SIG_1;
-    pbALARM2 := sb_SIG_2 <> pb_SIG_2;
-    pbALARM3 := sb_SIG_3 <> pb_SIG_3;
-    pbALARM4 := sb_SIG_4 <> pb_SIG_4;
-  ELSE
-    siRUNUPCNT := siRUNUPCNT - 1;
-    pbALARM1 := FALSE;
-    pbALARM2 := FALSE;
-    pbALARM3 := FALSE;
-    pbALARM4 := FALSE;
-    pbM_SUP := TRUE;
-  END_IF;
+
+    // 设置输出值
+    AI_error := ERR;
+    overflow := OVFL;
+    underflow := UDFL;
+    invalid := ERR OR OVFL OR UDFL;
+    IF invalid THEN
+        AH_flag := FALSE;
+        WH_flag := FALSE;
+        WL_flag := FALSE;
+        AL_flag := FALSE;
+        PV := invalid_value; // 无效时不计算，直接赋值为 -1000000.0
+        tmp_value := invalid_value;
+    ELSE
+        tmp_value := (value_raw - zero_raw) * (span - zero) / (span_raw - zero_raw) + zero;
+        PV := tmp_value;
+    END_IF;
+
+    //补全限制值
+    no_alarm := FALSE;
+    IF enable_AH THEN
+        tmp_AH := AH_limit;
+    ELSIF enable_WH THEN
+        tmp_AH := WH_limit;
+    ELSIF enable_WL THEN
+        tmp_AH := WL_limit;
+    ELSIF enable_AL THEN
+        tmp_AH := AL_limit;
+    ELSE
+        no_alarm := TRUE;
+    END_IF;
+
+    IF enable_WH THEN
+        tmp_WH := WH_limit;
+    ELSE
+        tmp_WH := tmp_AH;
+    END_IF;
+
+    IF enable_WL THEN
+        tmp_WL := WL_limit;
+    ELSE
+        tmp_WL := tmp_WH;
+    END_IF;
+
+    IF enable_AL THEN
+        tmp_AL := AL_limit;
+    ELSE
+        tmp_AL := tmp_WL;
+    END_IF;
+
+    // 参数设置错误
+    SP_error := tmp_WH > tmp_AH OR tmp_WL > tmp_WH OR tmp_AL > tmp_WL;
+
+    // 报警触发
+    IF SP_error OR invalid THEN
+        trigger_AH := FALSE;
+        trigger_WH := FALSE;
+        trigger_WL := FALSE;
+        trigger_AL := FALSE;
+    ELSE
+        // 上上限报警
+        IF enable_AH AND (tmp_value > AH_limit) THEN
+            trigger_AH := TRUE;
+            trigger_WH := FALSE;
+            trigger_AL := FALSE;
+            trigger_WL := FALSE;
+            // 记录最后的报警值
+            AH_PV := tmp_value;
+        END_IF;
+        // 上上限报警恢复
+        IF NOT enable_AH OR tmp_value < (AH_limit - dead_zone) THEN
+            trigger_AH := FALSE;
+        END_IF;
+        
+        // 上限报警
+        IF NOT trigger_AH AND enable_WH AND (tmp_value > WH_limit) THEN
+            trigger_WH := TRUE;
+            trigger_AL := FALSE;
+            trigger_WL := FALSE;
+            // 记录最后的报警值
+            WH_PV := tmp_value;
+        END_IF;
+        // 上限报警恢复
+        IF NOT enable_WH OR tmp_value < (WH_limit - dead_zone) THEN
+            trigger_WH := FALSE;
+        END_IF;
+        
+        // 下下限报警
+        IF enable_AL AND (tmp_value < AL_limit) THEN
+            trigger_AL := TRUE;
+            trigger_WL := FALSE;
+            trigger_WH := FALSE;
+            trigger_AH := FALSE;
+            // 记录最后的报警值
+            AL_PV := tmp_value;
+        END_IF;
+        // 下下限报警恢复
+        IF NOT enable_AL OR tmp_value > (AL_limit + dead_zone) THEN
+            trigger_AL := FALSE;
+        END_IF;
+        
+        // 下限报警
+        IF NOT trigger_AL AND enable_WL AND (tmp_value < WL_limit) THEN
+            trigger_WL := TRUE;
+            trigger_WH := FALSE;
+            trigger_AH := FALSE;
+            // 记录最后的报警值
+            WL_PV := tmp_value;
+        END_IF;
+        // 下限报警恢复
+        IF NOT enable_WL OR tmp_value > (WL_limit + dead_zone) THEN
+            trigger_WL := FALSE;
+        END_IF;
+    END_IF;
+
+    // 容错时限后输出报警标志
+    IF FT_time = 0 THEN
+        AH_flag := trigger_AH;
+        WH_flag := trigger_WH;
+        WL_flag := trigger_WL;
+        AL_flag := trigger_AL;
+    ELSE
+        // 延时置位高高报
+        AH_flag_set(
+            IN := trigger_AH,
+            PT := ftTime);
+        IF AH_flag_set.Q THEN
+            AH_flag := TRUE;
+        END_IF;
+
+        // 延时复位高高报
+        AH_flag_reset(
+            IN := trigger_AH,
+            PT := ftTime);
+        IF NOT AH_flag_reset.Q THEN
+            AH_flag := FALSE;
+        END_IF;
+        
+        // 延时置位高报
+        WH_flag_set(
+            IN := trigger_WH,
+            PT := ftTime);
+        IF WH_flag_set.Q THEN
+            WH_flag := TRUE;
+        END_IF;
+
+        // 延时复位高报
+        WH_flag_reset(
+            IN := trigger_WH,
+            PT := ftTime);
+        IF NOT WH_flag_reset.Q THEN
+            WH_flag := FALSE;
+        END_IF;
+        
+        // 延时置位低报
+        WL_flag_set(
+            IN := trigger_WL,
+            PT := ftTime);
+        IF WL_flag_set.Q THEN
+            WL_flag := TRUE;
+        END_IF;
+
+        // 延时复位低报
+        WL_flag_reset(
+            IN := trigger_WL,
+            PT := ftTime);
+        IF NOT WL_flag_reset.Q THEN
+            WL_flag := FALSE;
+        END_IF;
+
+        // 延时置位低低报
+        AL_flag_set(
+            IN := trigger_AL,
+            PT := ftTime);
+        IF AL_flag_set.Q THEN
+            AL_flag := TRUE;
+        END_IF;
+        
+        // 延时复位低低报
+        AL_flag_reset(
+            IN := trigger_AL,
+            PT := ftTime);
+        IF NOT AL_flag_reset.Q THEN
+            AL_flag := FALSE;
+        END_IF;
+        
+    END_IF;
+
+    IF siRUNUPCNT = 0 THEN
+        IF MSG_LOCK THEN
+            pb_SIG_1 := 0;
+            pb_SIG_2 := 0;
+            pb_SIG_3 := 0;
+            pb_SIG_4 := 0;
+        ELSE
+            pb_SIG_1 := AH_flag;
+            pb_SIG_2 := WH_flag;
+            pb_SIG_3 := WL_flag;
+            pb_SIG_4 := AL_flag;
+        END_IF;
+        pbALARM1 := sb_SIG_1 <> pb_SIG_1;
+        pbALARM2 := sb_SIG_2 <> pb_SIG_2;
+        pbALARM3 := sb_SIG_3 <> pb_SIG_3;
+        pbALARM4 := sb_SIG_4 <> pb_SIG_4;
+    ELSE
+        siRUNUPCNT := siRUNUPCNT - 1;
+        pbALARM1 := FALSE;
+        pbALARM2 := FALSE;
+        pbALARM3 := FALSE;
+        pbALARM4 := FALSE;
+        pbM_SUP := TRUE;
+    END_IF;
 END_CASE;
 
 // ****************
 // Message with ALARM_8P
 // *******************
 IF (pbALARM1 XOR pbALARM2 XOR pbALARM3 XOR pbALARM4) THEN 
-  ALARM_8P_1(
-    EN_R := TRUE,
-    ID := 16#EEEE,
-    EV_ID := EV_ID,
-    SIG_1 := pb_SIG_1,
-    SIG_2 := pb_SIG_2,
-    SIG_3 := pb_SIG_3,
-    SIG_4 := pb_SIG_4,
-    SIG_5 := 0,
-    SIG_6 := 0,
-    SIG_7 := 0,
-    SIG_8 := 0,
-    SD_1 := tmp_value,
-    SD_2 := AUX_PR02,
-    SD_3 := AUX_PR03,
-    SD_4 := AUX_PR04,
-    SD_5 := AUX_PR05,
-    SD_6 := AUX_PR06,
-    SD_7 := AUX_PR07,
-    SD_8 := AUX_PR08,
-    SD_9 := AUX_PR09,
-    SD_10 := AUX_PR10);
-  QMSG_ERR := ALARM_8P_1.ERROR;
-  MSG_STAT := ALARM_8P_1.STATUS;
-  MSG_ACK := ALARM_8P_1.ACK_STATE;
+    ALARM_8P_1(
+        EN_R := TRUE,
+        ID := 16#EEEE,
+        EV_ID := EV_ID,
+        SIG_1 := pb_SIG_1,
+        SIG_2 := pb_SIG_2,
+        SIG_3 := pb_SIG_3,
+        SIG_4 := pb_SIG_4,
+        SIG_5 := 0,
+        SIG_6 := 0,
+        SIG_7 := 0,
+        SIG_8 := 0,
+        SD_1 := tmp_value,
+        SD_2 := AUX_PR02,
+        SD_3 := AUX_PR03,
+        SD_4 := AUX_PR04,
+        SD_5 := AUX_PR05,
+        SD_6 := AUX_PR06,
+        SD_7 := AUX_PR07,
+        SD_8 := AUX_PR08,
+        SD_9 := AUX_PR09,
+        SD_10 := AUX_PR10);
+    QMSG_ERR := ALARM_8P_1.ERROR;
+    MSG_STAT := ALARM_8P_1.STATUS;
+    MSG_ACK := ALARM_8P_1.ACK_STATE;
 END_IF;
 IF (NOT QMSG_ERR) AND pbALARM1 THEN 
-  sb_SIG_1 := pb_SIG_1;
-  // sb_SIG_2:=pb_SIG_2;
-  // sb_SIG_3:=pb_SIG_3;
-  // sb_SIG_4:=pb_SIG_4;
+    sb_SIG_1 := pb_SIG_1;
+    // sb_SIG_2:=pb_SIG_2;
+    // sb_SIG_3:=pb_SIG_3;
+    // sb_SIG_4:=pb_SIG_4;
 END_IF;
 IF (NOT QMSG_ERR) AND pbALARM2 THEN 
-  // sb_SIG_1:=pb_SIG_1;
-  sb_SIG_2 := pb_SIG_2;
-  // sb_SIG_3:=pb_SIG_3;
-  // sb_SIG_4:=pb_SIG_4;
+    // sb_SIG_1:=pb_SIG_1;
+    sb_SIG_2 := pb_SIG_2;
+    // sb_SIG_3:=pb_SIG_3;
+    // sb_SIG_4:=pb_SIG_4;
 END_IF;
 IF (NOT QMSG_ERR) AND pbALARM3 THEN 
-  // sb_SIG_1:=pb_SIG_1;
-  // sb_SIG_2:=pb_SIG_2;
-  sb_SIG_3 := pb_SIG_3;
-  // sb_SIG_4:=pb_SIG_4;
+    // sb_SIG_1:=pb_SIG_1;
+    // sb_SIG_2:=pb_SIG_2;
+    sb_SIG_3 := pb_SIG_3;
+    // sb_SIG_4:=pb_SIG_4;
 END_IF;
 IF (NOT QMSG_ERR) AND pbALARM4 THEN 
-  // sb_SIG_1:=pb_SIG_1;
-  // sb_SIG_2:=pb_SIG_2;
-  // sb_SIG_3:=pb_SIG_3;
-  sb_SIG_4 := pb_SIG_4;
+    // sb_SIG_1:=pb_SIG_1;
+    // sb_SIG_2:=pb_SIG_2;
+    // sb_SIG_3:=pb_SIG_3;
+    sb_SIG_4 := pb_SIG_4;
 END_IF;
 IF (MSG_STAT = 21) THEN 
-  pbM_SUP := TRUE;
+    pbM_SUP := TRUE;
 END_IF;
 QMSG_SUP := pbM_SUP;
 
